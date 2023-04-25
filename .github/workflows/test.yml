@@ -1,7 +1,6 @@
 name: Tests
 on:
   workflow_dispatch:
-  pull_requests:
 jobs:
   tests:
     run-on: ubuntu-latest
