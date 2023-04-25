@@ -1,0 +1,15 @@
+name: Tests
+on:
+  workflow_dispatch:
+jobs:
+  tests:
+    run-on: ubuntu-latest
+    steps:
+      - name: Get code from repository
+        uses: actions/checkout@v3
+      - name: Environment
+        run: sh ./bin/environment.sh http://localhost 127.0.0.1 3306 ${{ secrets.DB_NAME }} ${{ secrets.DB_USER }} ${{ secrets.DB_PASS }} redis null 6379
+      - name: Build
+        run: sh ./bin/build.sh
+      - name: Tests
+        run: sh ./bin/test.sh
