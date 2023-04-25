@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./vendor/bin/sail artisan test
+./vendor/bin/sail artisan test --env=testing
