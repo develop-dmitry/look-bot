@@ -16,9 +16,9 @@ jobs:
       - name: Set Directory Name
         run: echo "DEPLOY_DIR=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
       - name: Deploy
-        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/lookbot &&
-          mkdir $DEPLOY_DIR &&
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/lookbot/releases &&
+          sudo -u www-data mkdir $DEPLOY_DIR &&
           cd $DEPLOY_DIR &&
-          git clone git@github.com:develop-dmitry/look-bot.git . &&
-          sh bin/build-production.sh &&
-          sh bin/deploy.sh"
+          sudo -u www-data git clone git@github.com:develop-dmitry/look-bot.git . &&
+          sudo -u www-data sh bin/build-production.sh &&
+          sudo -u www-data sh bin/deploy.sh"
