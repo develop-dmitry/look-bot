@@ -2,7 +2,7 @@ name: Tests
 on:
   workflow_dispatch:
 jobs:
-  tests:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Get code from repository
