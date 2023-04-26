@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo -u www-data composer install --ignore-platform-reqs
-sudo systemctl restart php8.1-fpm restart
+sudo systemctl restart php8.1-fpm
 
 sudo -u www-data php artisan cache:clear
 sudo -u www-data php artisan config:clear

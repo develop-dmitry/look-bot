@@ -28,7 +28,7 @@ jobs:
   rollback:
     needs: deploy
     environment:
-      name: approvers
+      name: Rollback
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH Key
