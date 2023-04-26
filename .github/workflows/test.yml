@@ -1,6 +1,7 @@
 name: Tests
 on:
-  workflow_dispatch:
+  repository_dispatch:
+    types: [ create-pull-request ]
 jobs:
   test:
     runs-on: ubuntu-latest
