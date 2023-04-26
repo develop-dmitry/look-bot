@@ -24,5 +24,5 @@ jobs:
           sh bin/environment.sh ${{ secrets.APP_URL }} ${{ secrets.DB_HOST }} ${{ secrets.DB_PORT }} ${{ secrets.DB_NAME }} ${{ secrets.DB_USER }} ${{ secrets.DB_PASS }} ${{ secrets.REDIS_HOST }} ${{ secrets.REDIS_PASS }} ${{ secrets.REDIS_PORT }} &&
           sh bin/build-production.sh &&
           sh bin/deploy.sh ${{ secrets.SERVER_NAME }} &&
-          ( [ ! -d /var/www/lookbot/current ] || mv -Tf /var/www/lookbot/current /var/www/lookbot/previous ) &&
-          ln -s /var/www/lookbot/releases/$DEPLOY_DIR /var/www/lookbot/current"
+          ( [ ! -d /var/www/lookbot/current ] || sudo -u www:data mv -Tf /var/www/lookbot/current /var/www/lookbot/previous ) &&
+          sudo -u www-data ln -s /var/www/lookbot/releases/$DEPLOY_DIR /var/www/lookbot/current"
