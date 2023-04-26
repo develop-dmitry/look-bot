@@ -16,9 +16,8 @@ jobs:
       - name: Set Directory Name
         run: echo "DEPLOY_DIR=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
       - name: Deploy
-        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/lookbot/releases &&
-          mkdir $DEPLOY_DIR &&
-          cd $DEPLOY_DIR &&
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir /var/www/lookbot/releases/$DEPLOY_DIR &&
+          cd /var/www/lookbot/releases/$DEPLOY_DIR &&
           git clone git@github.com:develop-dmitry/look-bot.git . &&
           sudo chown www-data:www-data . -R &&
           sh bin/environment.sh ${{ secrets.APP_URL }} ${{ secrets.DB_HOST }} ${{ secrets.DB_PORT }} ${{ secrets.DB_NAME }} ${{ secrets.DB_USER }} ${{ secrets.DB_PASS }} ${{ secrets.REDIS_HOST }} ${{ secrets.REDIS_PASS }} ${{ secrets.REDIS_PORT }} &&
@@ -26,3 +25,24 @@ jobs:
           sh bin/deploy.sh ${{ secrets.SERVER_NAME }} &&
           ( [ ! -d /var/www/lookbot/current ] || sudo -u www-data mv -Tf /var/www/lookbot/current /var/www/lookbot/previous ) &&
           sudo -u www-data ln -s /var/www/lookbot/releases/$DEPLOY_DIR /var/www/lookbot/current"
+  rollback:
+    needs: deploy
+    environment:
+      name: approvers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_rsa
+          known_hosts: ${{ secrets.SSH_HOST }}
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Set Directory Name
+        run: echo "DEPLOY_DIR=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+      - name: Deploy
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "unlink /var/www/lookbot/current &&
+          sudo -u www-data mv -Tf /var/www/lookbot/previous /var/www/lookbot/current &&
+          cd /var/www/lookbot/current &&
+          sh bin/rollback.sh ${{ secrets.SERVER_NAME }}"
