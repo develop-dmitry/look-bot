@@ -46,6 +46,7 @@ class HairResource extends Resource
                     ->required()
                     ->mask(static fn (Forms\Components\TextInput\Mask $mask) => $mask
                         ->range()
+                        ->numeric()
                         ->from(0)
                         ->to(100)
                         ->maxValue(100)
