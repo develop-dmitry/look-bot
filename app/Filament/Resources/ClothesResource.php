@@ -81,7 +81,8 @@ class ClothesResource extends Resource
     {
         return [
             RelationManagers\EventsRelationManager::class,
-            RelationManagers\StylesRelationManager::class
+            RelationManagers\StylesRelationManager::class,
+            RelationManagers\SeasonsRelationManager::class
         ];
     }
 
