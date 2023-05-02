@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Look\Application\Messenger\AddSupportMessengerHandler;
 use Look\Application\Messenger\MenuMessengerHandler;
+use Look\Application\Messenger\SupportMessengerHandler;
 use Look\Application\Messenger\WelcomeMessengerHandler;
 use Look\Domain\Messenger\Exception\MessengerHandlerAlreadyExistsException;
 use Look\Domain\Messenger\Handler\MessengerHandlerName;
@@ -63,6 +65,18 @@ class TelegramController extends Controller
                 $this->buttonFactory,
                 $this->optionFactory
             )
+        );
+
+        $this->addHandler(
+            MessengerHandlerName::Support,
+            MessengerHandlerType::Text,
+            new SupportMessengerHandler()
+        );
+
+        $this->addHandler(
+            MessengerHandlerName::AddSupportMessage,
+            MessengerHandlerType::Message,
+            new AddSupportMessengerHandler()
         );
     }
 

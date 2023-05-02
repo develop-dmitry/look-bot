@@ -4,50 +4,44 @@ declare(strict_types=1);
 
 namespace Look\Infrastructure\Repository;
 
-use App\Models\Client;
-use Look\Domain\Client\Exception\ClientNotFoundException;
-use Look\Domain\Client\Exception\FailedCreateClientException;
-use Look\Domain\Client\Interface\ClientBuilderInterface;
-use Look\Domain\Client\Interface\ClientInterface;
-use Look\Domain\Client\Interface\ClientRepositoryInterface;
+use Look\Domain\Entity\Client\Exception\ClientNotFoundException;
+use Look\Domain\Entity\Client\Interface\ClientInterface;
+use Look\Domain\Entity\Client\Interface\ClientRepositoryInterface;
+use Look\Domain\Storage\Interface\Request\InsertRequestInterface;
 
-class ClientRepository implements ClientRepositoryInterface
+class ClientRepository extends AbstractRepository implements ClientRepositoryInterface
 {
-    public function __construct(
-        protected ClientBuilderInterface $clientBuilder
-    ) {
-    }
-
     public function getClientByTelegramId(int $telegramId): ClientInterface
     {
-        $client = Client::where('telegram_id', $telegramId)->first();
+        $filter = $this->parameterFactory->makeFilter()
+            ->addCondition('telegram_id', '=', $telegramId);
 
-        if (!$client) {
+        $selectRequest = $this->requestFactory->makeSelectRequest($filter);
+        $clients = $this->storage->select($selectRequest);
+
+        if (empty($clients)) {
             throw new ClientNotFoundException("Client with telegram id $telegramId not found");
         }
 
-        return $this->makeEntity($client);
+        return $clients[0];
     }
 
     public function createClient(ClientInterface $client): void
     {
-        $model = new Client();
+        $insertRequest = $this->makeInsertRequest($client);
 
-        $model->user_id = $client->getUserId();
-        $model->telegram_id = $client->getTelegramId();
+        $id = $this->storage->insert($insertRequest);
 
-        if (!$model->save()) {
-            throw new FailedCreateClientException('Failed to create client');
-        }
-
-        $client->setId($model->id);
+        $client->setId($id);
     }
 
-    protected function makeEntity(Client $client): ClientInterface
+    protected function makeInsertRequest(ClientInterface $client): InsertRequestInterface
     {
-        return $this->clientBuilder
-            ->setUserId($client->user_id)
-            ->setTelegramId($client->telegram_id)
-            ->makeClient();
+        $properties = [
+            'telegram_id' => $client->getTelegramId()?->getValue(),
+            'user_id' => $client->getUserId()?->getValue()
+        ];
+
+        return $this->requestFactory->makeInsertRequest($properties);
     }
 }

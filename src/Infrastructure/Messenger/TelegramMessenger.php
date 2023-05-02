@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Look\Infrastructure\Messenger;
 
 use Illuminate\Database\Eloquent\Casts\Json;
-use Look\Domain\Client\Exception\ClientNotFoundException;
-use Look\Domain\Client\Exception\FailedCreateClientException;
-use Look\Domain\Client\Interface\ClientBuilderInterface;
-use Look\Domain\Client\Interface\ClientInterface;
-use Look\Domain\Client\Interface\ClientRepositoryInterface;
-use Look\Domain\Messenger\Exception\FailedSetNextMessageHandlerException;
+use Look\Application\Client\ClientUseCaseInterface;
+use Look\Application\Client\Request\Interface\ClientRequestFactoryInterface;
+use Look\Domain\Entity\Client\Exception\ClientNotFoundException;
+use Look\Domain\Entity\Client\Interface\ClientInterface;
+use Look\Domain\Messenger\Exception\MessengerHandlerNotFoundException;
+use Look\Domain\Messenger\Exception\NextMessageHandlerNotFoundException;
 use Look\Domain\Messenger\Handler\MessengerHandlerName;
 use Look\Domain\Messenger\Handler\MessengerHandlerType;
 use Look\Domain\Messenger\Interface\ButtonInterface;
 use Look\Domain\Messenger\Interface\KeyboardInterface;
-use Look\Domain\Messenger\Interface\MessageHandlerRepositoryInterface;
+use Look\Domain\Messenger\Interface\NextMessageHandlerRepositoryInterface;
 use Look\Domain\Messenger\Interface\MessengerHandlerContainerInterface;
 use Look\Domain\Messenger\Interface\MessengerHandlerInterface;
 use Look\Domain\Messenger\Interface\MessengerInterface;
@@ -24,7 +24,10 @@ use Look\Domain\Messenger\Interface\MessengerRequestInterface;
 use Look\Domain\Messenger\Keyboard\KeyboardType;
 use Look\Domain\Messenger\Option\ButtonOption\ButtonOptionName;
 use Look\Domain\Messenger\Option\KeyboardOption\KeyboardOptionName;
+use Look\Domain\Storage\Exception\StorageException;
+use Look\Domain\Value\Exception\InvalidValueException;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\RunningMode\Webhook;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
@@ -32,9 +35,15 @@ use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\KeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardMarkup;
 use SergiX44\Nutgram\Telegram\Types\Message\Message;
+use Throwable;
 
 class TelegramMessenger implements MessengerInterface
 {
+    /**
+     * Initialized inside handler
+     */
+    protected ClientInterface $client;
+
     protected ?MessengerHandlerContainerInterface $handlers = null;
 
     protected ?KeyboardInterface $keyboard = null;
@@ -45,13 +54,15 @@ class TelegramMessenger implements MessengerInterface
 
     protected ?MessengerRequestInterface $request = null;
 
+    protected ?MessengerHandlerName $nextMessengerHandler = null;
+
     public function __construct(
-        protected Nutgram $bot,
-        protected MessengerRequestFactoryInterface $messengerRequestFactory,
-        protected ClientRepositoryInterface $clientRepository,
-        protected ClientBuilderInterface $clientBuilder,
-        protected MessageHandlerRepositoryInterface $messageHandlerRepository,
-        protected LoggerInterface $logger
+        protected Nutgram                               $bot,
+        protected MessengerRequestFactoryInterface      $messengerRequestFactory,
+        protected NextMessageHandlerRepositoryInterface $messageHandlerRepository,
+        protected ClientUseCaseInterface                $clientUseCase,
+        protected ClientRequestFactoryInterface         $clientRequestFactory,
+        protected LoggerInterface                       $logger,
     ) {
     }
 
@@ -87,7 +98,7 @@ class TelegramMessenger implements MessengerInterface
 
     public function setNextMessageHandler(MessengerHandlerName $handlerName): void
     {
-        $this->messageHandlerRepository->setNextHandlerName($this->getClient(), $handlerName);
+        $this->nextMessengerHandler = $handlerName;
     }
 
     protected function setHandlers(): void
@@ -96,57 +107,60 @@ class TelegramMessenger implements MessengerInterface
             return;
         }
 
-        $textHandlers = $this->handlers->getHandlers(MessengerHandlerType::Text);
-        $commandHandlers = $this->handlers->getHandlers(MessengerHandlerType::Command);
-
-        foreach ($textHandlers as $name => $handler) {
+        foreach ($this->handlers->getHandlers(MessengerHandlerType::Text) as $name => $handler) {
             $this->bot->onText($name, fn () => $this->executeHandler($handler));
         }
 
-        foreach ($commandHandlers as $command => $handler) {
+        foreach ($this->handlers->getHandlers(MessengerHandlerType::Command) as $command => $handler) {
             $this->bot->onCommand($command, fn () => $this->executeHandler($handler));
         }
 
-        $this->bot->onCallbackQuery(function () {
-            $callbackQuery = $this->getRequest()->getCallbackQuery();
-            $action = MessengerHandlerName::tryFrom($callbackQuery['action'] ?? '');
-            $handler = null;
+        $this->bot->onCallbackQuery(fn () => $this->executeHandler([$this, 'getCallbackQueryHandler']));
 
-            if ($action) {
-                $handler = $this->handlers->getHandler($action, MessengerHandlerType::CallbackQuery);
-            }
-
-            return $this->executeHandler($handler);
-        });
-
-        $this->bot->onMessage(function () {
-            try {
-                $handler = $this->messageHandlerRepository->getNextHandlerName($this->getClient());
-            } catch (FailedCreateClientException $exception) {
-                $handler = null;
-                $this->logger->emergency('Не удалось создать клиента', ['exception' => $exception]);
-            }
-
-            return $this->executeHandler($handler);
-        });
+        $this->bot->onMessage(fn () => $this->executeHandler([$this, 'getMessageHandler']));
     }
 
-    protected function executeHandler(?MessengerHandlerInterface $handler): bool|array|Message|null
+    protected function executeHandler(callable|MessengerHandlerInterface $handler): bool|array|Message|null
     {
-        if ($handler) {
+        try {
+            $this->initClient();
+
+            if (is_callable($handler)) {
+                $handler = $handler();
+            }
+
+            $handler->handle($this->getRequest(), $this, $this->client);
+        } catch (MessengerHandlerNotFoundException) {
+            $this->sendMessage('Я не знаю такой команды :(');
+        } catch (NextMessageHandlerNotFoundException) {
+            $this->sendMessage('Не понимаю о чем вы :(');
+        } catch (Throwable $exception) {
+            $this->sendTechnicalErrorMessage();
+            $this->logger->emergency('Непредвиденная ошибка', ['exception' => $exception, 'bot' => $this->bot]);
+        }
+
+        if ($this->nextMessengerHandler) {
             try {
-                $handler->handle(
-                    $this->getRequest(),
-                    $this,
-                    $this->getClient()
+                $this->messageHandlerRepository->setHandlerName($this->client, $this->nextMessengerHandler);
+            } catch (StorageException $exception) {
+                $this->logger->emergency(
+                    'Не удалось сохранить обработчик для следующего сообщения',
+                    ['exception' => $exception]
                 );
-            } catch (FailedCreateClientException $exception) {
-                $this->logger->emergency('Не удалось создать клиента', ['exception' => $exception]);
+
                 $this->sendTechnicalErrorMessage();
             }
         } else {
-            $this->sendTechnicalErrorMessage();
+            try {
+                $this->messageHandlerRepository->deleteHandlerName($this->client);
+            } catch (StorageException $exception) {
+                $this->logger->emergency(
+                    'Не удалось удалить обработчик для следующего сообщения',
+                    ['exception' => $exception]
+                );
+            }
         }
+
 
         $options = $this->getMessageOptions();
 
@@ -174,27 +188,6 @@ class TelegramMessenger implements MessengerInterface
         return $this->request;
     }
 
-    /**
-     * @return ClientInterface
-     * @throws FailedCreateClientException
-     */
-    protected function getClient(): ClientInterface
-    {
-        $telegramId = $this->bot->user()?->id;
-
-        try {
-            return $this->clientRepository->getClientByTelegramId($telegramId);
-        } catch (ClientNotFoundException) {
-            $client = $this->clientBuilder
-                ->setTelegramId($telegramId)
-                ->makeClient();
-
-            $this->clientRepository->createClient($client);
-
-            return $client;
-        }
-    }
-
     protected function getMessageOptions(): array
     {
         $options = [];
@@ -218,8 +211,7 @@ class TelegramMessenger implements MessengerInterface
 
         return match ($type) {
             KeyboardType::Inline => $this->makeInlineKeyboardMarkup(),
-            KeyboardType::Reply => $this->makeReplyKeyboardMarkup(),
-            default => null
+            KeyboardType::Reply => $this->makeReplyKeyboardMarkup()
         };
     }
 
@@ -289,5 +281,90 @@ class TelegramMessenger implements MessengerInterface
             $button->getOption(ButtonOptionName::RequestUser->value)->getValue(),
             $button->getOption(ButtonOptionName::RequestChat->value)->getValue()
         );
+    }
+
+    /**
+     * @return void
+     * @throws StorageException|ClientNotFoundException|InvalidValueException|RuntimeException
+     */
+    protected function initClient(): void
+    {
+        $userId = $this->bot->userId();
+
+        if (!($userId)) {
+            throw new RuntimeException('В запросе не найден ID пользователя телеграма');
+        }
+
+        $request = $this->clientRequestFactory->makeClientByTelegramRequest($userId);
+
+        $this->client = $this->clientUseCase->getClientByTelegram($request);
+    }
+
+    /**
+     * @throws MessengerHandlerNotFoundException
+     */
+    protected function getCallbackQueryHandler(): ?MessengerHandlerInterface
+    {
+        $callbackQuery = $this->getRequest()->getCallbackQuery();
+
+        if (!isset($callbackQuery['action'])) {
+            $this->logger->emergency(
+                'Не удалось получить action из callback query',
+                ['callback_query' => $callbackQuery]
+            );
+
+            throw new MessengerHandlerNotFoundException('Не удалось получить action из callback query');
+        }
+
+        $action = MessengerHandlerName::tryFrom($callbackQuery['action']);
+
+        if (!$action) {
+            $this->logger->emergency(
+                'Не удалось найти название обработчика для action из callback query',
+                ['callback_query' => $callbackQuery]
+            );
+
+            throw new MessengerHandlerNotFoundException(
+                'Не удалось найти название обработчика для action из callback query'
+            );
+        }
+
+        return $this->getHandler($action, MessengerHandlerType::CallbackQuery);
+    }
+
+    /**
+     * @throws MessengerHandlerNotFoundException|StorageException|NextMessageHandlerNotFoundException
+     */
+    protected function getMessageHandler(): ?MessengerHandlerInterface
+    {
+        try {
+            $name = $this->messageHandlerRepository->getHandlerName($this->client);
+
+            return $this->getHandler($name, MessengerHandlerType::Message);
+        } catch (StorageException $exception) {
+            $this->logger->emergency(
+                'При получении название обработчика для сообщения произошла ошибка',
+                ['exception' => $exception]
+            );
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @throws MessengerHandlerNotFoundException
+     */
+    protected function getHandler(MessengerHandlerName $name, MessengerHandlerType $type): ?MessengerHandlerInterface
+    {
+        try {
+            return $this->handlers->getHandler($name, $type);
+        } catch (MessengerHandlerNotFoundException $exception) {
+            $this->logger->error(
+                'Не удалось найти обработчик',
+                ['name' => $name, 'type' => $type, 'exception' => $exception]
+            );
+
+            throw $exception;
+        }
     }
 }

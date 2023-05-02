@@ -6,6 +6,7 @@ namespace Look\Domain\Messenger\Interface;
 
 use Look\Domain\Messenger\Exception\FailedSetNextMessageHandlerException;
 use Look\Domain\Messenger\Handler\MessengerHandlerName;
+use Look\Domain\Storage\Exception\StorageException;
 
 interface MessengerInterface
 {
@@ -41,7 +42,6 @@ interface MessengerInterface
     /**
      * @param MessengerHandlerName $handlerName
      * @return void
-     * @throws FailedSetNextMessageHandlerException
      */
     public function setNextMessageHandler(MessengerHandlerName $handlerName): void;
 }

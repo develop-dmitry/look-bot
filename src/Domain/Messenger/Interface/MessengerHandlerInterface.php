@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Domain\Messenger\Interface;
 
-use Look\Domain\Client\Interface\ClientInterface;
-use Look\Domain\User\Interface\UserInterface;
+use Look\Domain\Entity\Client\Interface\ClientInterface;
 
 interface MessengerHandlerInterface
 {
