@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Look\Domain\Entity\Client\Interface;
 
+use Look\Domain\Entity\Exception\RepositoryException;
+use Look\Domain\Entity\MessengerUser\Exception\MessengerUserNotFoundException;
+use Look\Domain\Entity\MessengerUser\Interface\MessengerUserInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Look\Domain\Value\Id;
 
@@ -44,4 +47,10 @@ interface ClientInterface
      * @return Id|null
      */
     public function getId(): ?Id;
+
+    /**
+     * @return MessengerUserInterface
+     * @throws RepositoryException|InvalidValueException|MessengerUserNotFoundException
+     */
+    public function getTelegramUser(): MessengerUserInterface;
 }

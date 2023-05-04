@@ -9,13 +9,16 @@ use Look\Application\Client\ClientUseCaseInterface;
 use Look\Application\Client\Request\Interface\ClientRequestFactoryInterface;
 use Look\Domain\Entity\Client\Exception\ClientNotFoundException;
 use Look\Domain\Entity\Client\Interface\ClientInterface;
+use Look\Domain\Entity\Exception\RepositoryException;
+use Look\Domain\Entity\MessengerUser\Exception\MessengerUserNotFoundException;
+use Look\Domain\Entity\MessengerUser\Interface\TelegramMessengerUserRepositoryInterface;
 use Look\Domain\Messenger\Exception\MessengerHandlerNotFoundException;
 use Look\Domain\Messenger\Exception\NextMessageHandlerNotFoundException;
 use Look\Domain\Messenger\Handler\MessengerHandlerName;
 use Look\Domain\Messenger\Handler\MessengerHandlerType;
 use Look\Domain\Messenger\Interface\ButtonInterface;
 use Look\Domain\Messenger\Interface\KeyboardInterface;
-use Look\Domain\Messenger\Interface\NextMessageHandlerRepositoryInterface;
+use Look\Domain\Messenger\Interface\MessengerRepositoryInterface;
 use Look\Domain\Messenger\Interface\MessengerHandlerContainerInterface;
 use Look\Domain\Messenger\Interface\MessengerHandlerInterface;
 use Look\Domain\Messenger\Interface\MessengerInterface;
@@ -24,7 +27,6 @@ use Look\Domain\Messenger\Interface\MessengerRequestInterface;
 use Look\Domain\Messenger\Keyboard\KeyboardType;
 use Look\Domain\Messenger\Option\ButtonOption\ButtonOptionName;
 use Look\Domain\Messenger\Option\KeyboardOption\KeyboardOptionName;
-use Look\Domain\Storage\Exception\StorageException;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -54,15 +56,15 @@ class TelegramMessenger implements MessengerInterface
 
     protected ?MessengerRequestInterface $request = null;
 
-    protected ?MessengerHandlerName $nextMessengerHandler = null;
+    protected ?MessengerHandlerName $nextMessageHandler = null;
 
     public function __construct(
-        protected Nutgram                               $bot,
-        protected MessengerRequestFactoryInterface      $messengerRequestFactory,
-        protected NextMessageHandlerRepositoryInterface $messageHandlerRepository,
-        protected ClientUseCaseInterface                $clientUseCase,
-        protected ClientRequestFactoryInterface         $clientRequestFactory,
-        protected LoggerInterface                       $logger,
+        protected Nutgram                                  $bot,
+        protected MessengerRequestFactoryInterface         $messengerRequestFactory,
+        protected ClientUseCaseInterface                   $clientUseCase,
+        protected ClientRequestFactoryInterface            $clientRequestFactory,
+        protected TelegramMessengerUserRepositoryInterface $telegramMessengerUserRepository,
+        protected LoggerInterface                          $logger,
     ) {
     }
 
@@ -98,7 +100,7 @@ class TelegramMessenger implements MessengerInterface
 
     public function setNextMessageHandler(MessengerHandlerName $handlerName): void
     {
-        $this->nextMessengerHandler = $handlerName;
+        $this->nextMessageHandler = $handlerName;
     }
 
     protected function setHandlers(): void
@@ -139,28 +141,22 @@ class TelegramMessenger implements MessengerInterface
             $this->logger->emergency('Непредвиденная ошибка', ['exception' => $exception, 'bot' => $this->bot]);
         }
 
-        if ($this->nextMessengerHandler) {
-            try {
-                $this->messageHandlerRepository->setHandlerName($this->client, $this->nextMessengerHandler);
-            } catch (StorageException $exception) {
-                $this->logger->emergency(
-                    'Не удалось сохранить обработчик для следующего сообщения',
-                    ['exception' => $exception]
-                );
+        try {
+            $telegramUser = $this->client->getTelegramUser()
+                ?->setMessengerHandler($this->nextMessageHandler?->value);
 
-                $this->sendTechnicalErrorMessage();
+            if ($telegramUser) {
+                $this->telegramMessengerUserRepository->saveMessengerUser($telegramUser);
             }
-        } else {
-            try {
-                $this->messageHandlerRepository->deleteHandlerName($this->client);
-            } catch (StorageException $exception) {
-                $this->logger->emergency(
-                    'Не удалось удалить обработчик для следующего сообщения',
-                    ['exception' => $exception]
-                );
-            }
+        } catch (RepositoryException|InvalidValueException $exception) {
+            $this->logger->emergency('Не удалось сохранить название обработчика для следующего сообщения', [
+                'exception' => $exception
+            ]);
+        } catch (MessengerUserNotFoundException $exception) {
+            $this->logger->emergency('Не удалось найти пользователя telegram', [
+                'exception' => $exception
+            ]);
         }
-
 
         $options = $this->getMessageOptions();
 
@@ -285,7 +281,7 @@ class TelegramMessenger implements MessengerInterface
 
     /**
      * @return void
-     * @throws StorageException|ClientNotFoundException|InvalidValueException|RuntimeException
+     * @throws RepositoryException|ClientNotFoundException|InvalidValueException|RuntimeException
      */
     protected function initClient(): void
     {
@@ -333,21 +329,28 @@ class TelegramMessenger implements MessengerInterface
     }
 
     /**
-     * @throws MessengerHandlerNotFoundException|StorageException|NextMessageHandlerNotFoundException
+     * @throws MessengerHandlerNotFoundException|NextMessageHandlerNotFoundException
      */
-    protected function getMessageHandler(): ?MessengerHandlerInterface
+    protected function getMessageHandler(): MessengerHandlerInterface
     {
         try {
-            $name = $this->messageHandlerRepository->getHandlerName($this->client);
+            $telegramUser = $this->client->getTelegramUser();
 
-            return $this->getHandler($name, MessengerHandlerType::Message);
-        } catch (StorageException $exception) {
-            $this->logger->emergency(
-                'При получении название обработчика для сообщения произошла ошибка',
-                ['exception' => $exception]
-            );
+            if (!$telegramUser) {
+                throw new MessengerHandlerNotFoundException('Не найден пользователь телеграмма');
+            }
 
-            throw $exception;
+            $handler = $telegramUser->getMessageHandler();
+
+            if (!$handler) {
+                throw new NextMessageHandlerNotFoundException(
+                    'Название обработчика для сообщения не найдено'
+                );
+            }
+
+            return $this->getHandler($handler, MessengerHandlerType::Message);
+        } catch (RepositoryException|MessengerUserNotFoundException|InvalidValueException $exception) {
+            throw new MessengerHandlerNotFoundException($exception->getMessage());
         }
     }
 

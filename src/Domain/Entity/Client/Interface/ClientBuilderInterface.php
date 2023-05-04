@@ -10,30 +10,31 @@ interface ClientBuilderInterface
 {
     /**
      * @param int|null $id
-     * @return self
+     * @return static
      */
-    public function setId(?int $id): self;
+    public function setId(?int $id): static;
 
     /**
      * @param int|null $telegramId
-     * @return self
+     * @return static
      */
-    public function setTelegramId(?int $telegramId): self;
+    public function setTelegramId(?int $telegramId): static;
 
     /**
      * @param int|null $userId
-     * @return self
+     * @return static
      */
-    public function setUserId(?int $userId): self;
+    public function setUserId(?int $userId): static;
+
+    /**
+     * @param array $data
+     * @return static
+     */
+    public function fromArray(array $data): static;
 
     /**
      * @return ClientInterface
      * @throws InvalidValueException
      */
     public function make(): ClientInterface;
-
-    /**
-     * @return void
-     */
-    public function reset(): void;
 }
