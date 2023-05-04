@@ -7,7 +7,7 @@ namespace Look\Application\Messenger;
 use Look\Application\Messenger\Menu\FailedBuildMenuException;
 use Look\Application\Messenger\Menu\HasMenu;
 use Look\Application\Messenger\Menu\UseMenuInterface;
-use Look\Domain\Client\Interface\ClientInterface;
+use Look\Domain\Entity\Client\Interface\ClientInterface;
 use Look\Domain\Messenger\Interface\ButtonFactoryInterface;
 use Look\Domain\Messenger\Interface\KeyboardFactoryInterface;
 use Look\Domain\Messenger\Interface\MessengerHandlerInterface;
@@ -22,13 +22,10 @@ class MenuMessengerHandler implements MessengerHandlerInterface, UseMenuInterfac
 
     public function __construct(
         protected LoggerInterface $logger,
-        KeyboardFactoryInterface $keyboardFactory,
-        ButtonFactoryInterface $buttonFactory,
-        OptionFactoryInterface $optionFactory
+        protected KeyboardFactoryInterface $keyboardFactory,
+        protected ButtonFactoryInterface $buttonFactory,
+        protected OptionFactoryInterface $optionFactory
     ) {
-        $this->setKeyboardFactory($keyboardFactory);
-        $this->setButtonFactory($buttonFactory);
-        $this->setOptionFactory($optionFactory);
     }
 
     public function handle(

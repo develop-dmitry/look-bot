@@ -18,12 +18,6 @@ use Look\Domain\Messenger\Option\KeyboardOption\KeyboardOptionName;
 
 trait HasMenu
 {
-    protected KeyboardFactoryInterface $keyboardFactory;
-
-    protected ButtonFactoryInterface $buttonFactory;
-
-    protected OptionFactoryInterface $optionFactory;
-
     /**
      * @return KeyboardInterface
      * @throws FailedBuildMenuException
@@ -61,6 +55,9 @@ trait HasMenu
         $buttons[] = $this->buttonFactory->makeReplyButton()
             ->setText(__('telegram.menu.about'));
 
+        $buttons[] = $this->buttonFactory->makeReplyButton()
+            ->setText(__('telegram.menu.support'));
+
         return $buttons;
     }
 
@@ -76,20 +73,5 @@ trait HasMenu
             ->setValue(true);
 
         return $options;
-    }
-
-    protected function setKeyboardFactory(KeyboardFactoryInterface $keyboardFactory): void
-    {
-        $this->keyboardFactory = $keyboardFactory;
-    }
-
-    protected function setButtonFactory(ButtonFactoryInterface $buttonFactory): void
-    {
-        $this->buttonFactory = $buttonFactory;
-    }
-
-    protected function setOptionFactory(OptionFactoryInterface $optionFactory): void
-    {
-        $this->optionFactory = $optionFactory;
     }
 }
