@@ -3,20 +3,20 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Look\Application\Messenger\AddSupportMessengerHandler;
-use Look\Application\Messenger\MenuMessengerHandler;
-use Look\Application\Messenger\SupportMessengerHandler;
-use Look\Application\Messenger\WelcomeMessengerHandler;
-use Look\Domain\Messenger\Exception\MessengerHandlerAlreadyExistsException;
-use Look\Domain\Messenger\Handler\MessengerHandlerName;
-use Look\Domain\Messenger\Handler\MessengerHandlerType;
-use Look\Domain\Messenger\Interface\ButtonFactoryInterface;
-use Look\Domain\Messenger\Interface\KeyboardFactoryInterface;
-use Look\Domain\Messenger\Interface\MessengerContainerFactoryInterface;
-use Look\Domain\Messenger\Interface\MessengerHandlerContainerInterface;
-use Look\Domain\Messenger\Interface\MessengerHandlerInterface;
-use Look\Domain\Messenger\Interface\MessengerInterface;
-use Look\Domain\Messenger\Interface\OptionFactoryInterface;
+use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
+use Look\Application\Messenger\MessengerContainer\Interface\MessengerContainerFactoryInterface;
+use Look\Application\Messenger\MessengerHandler\AddSupportMessengerHandler;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
+use Look\Application\Messenger\MessengerHandler\Exception\MessengerHandlerAlreadyExistsException;
+use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerContainerInterface;
+use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
+use Look\Application\Messenger\MessengerHandler\MenuMessengerHandler;
+use Look\Application\Messenger\MessengerHandler\SupportMessengerHandler;
+use Look\Application\Messenger\MessengerHandler\WelcomeMessengerHandler;
+use Look\Application\Messenger\MessengerInterface;
+use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFactoryInterface;
+use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 class TelegramController extends Controller
@@ -24,12 +24,12 @@ class TelegramController extends Controller
     protected MessengerHandlerContainerInterface $handlers;
 
     public function __construct(
-        protected MessengerInterface $messenger,
+        protected MessengerInterface                 $messenger,
         protected MessengerContainerFactoryInterface $messengerContainerFactory,
-        protected LoggerInterface $logger,
-        protected KeyboardFactoryInterface $keyboardFactory,
-        protected ButtonFactoryInterface $buttonFactory,
-        protected OptionFactoryInterface $optionFactory
+        protected LoggerInterface                    $logger,
+        protected MessengerKeyboardFactoryInterface  $keyboardFactory,
+        protected MessengerButtonFactoryInterface    $buttonFactory,
+        protected MessengerOptionFactoryInterface $optionFactory
     ) {
         $this->handlers = $this->messengerContainerFactory->makeHandlerContainer();
     }
