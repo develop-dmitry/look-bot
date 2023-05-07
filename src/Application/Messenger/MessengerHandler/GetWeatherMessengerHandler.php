@@ -146,7 +146,7 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMainMe
                     default => ''
                 });
             } else {
-                $timeOfDayText = 'завтра';
+                $timeOfDayText = strtolower($this->dictionary->getTranslate('common.tomorrow'));
             }
 
             return $this->dictionary->getTranslate('telegram.get_weather.weather_message', [

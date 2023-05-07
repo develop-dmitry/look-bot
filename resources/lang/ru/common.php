@@ -3,5 +3,6 @@
 return [
     'afternoon' => 'День',
     'evening' => 'Вечер',
-    'night' => 'Ночь'
+    'night' => 'Ночь',
+    'tomorrow' => 'Завтра'
 ];
