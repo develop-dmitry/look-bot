@@ -11,6 +11,7 @@ use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
 use Look\Application\Messenger\MessengerHandler\Trait\Menu\HasMenu;
 use Look\Application\Messenger\MessengerHandler\Trait\Menu\UseMenuInterface;
@@ -81,6 +82,16 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
             $visual->sendMessage($this->dictionary->getTranslate('telegram.get_weather.need_location'));
             $visual->sendKeyboard($this->getGeoLocationKeyboard());
         }
+    }
+
+    public function getTypes(): array
+    {
+        return [MessengerHandlerType::Text, MessengerHandlerType::Message, MessengerHandlerType::CallbackQuery];
+    }
+
+    public function getNames(): array
+    {
+        return [MessengerHandlerName::GetWeatherText, MessengerHandlerName::GetWeatherCallbackQuery];
     }
 
     protected function saveGeoLocation(GeoLocationInterface $geoLocation, ?ClientInterface $client): void

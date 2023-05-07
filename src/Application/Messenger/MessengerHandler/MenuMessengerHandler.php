@@ -7,6 +7,8 @@ namespace Look\Application\Messenger\MessengerHandler;
 use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
 use Look\Application\Messenger\MessengerHandler\Trait\Menu\FailedBuildMenuException;
 use Look\Application\Messenger\MessengerHandler\Trait\Menu\HasMenu;
@@ -38,4 +40,16 @@ class MenuMessengerHandler implements MessengerHandlerInterface, UseMenuInterfac
             $this->logger->emergency('Не удалось сформировать меню', ['exception' => $exception]);
         }
     }
+
+    public function getTypes(): array
+    {
+        return [MessengerHandlerType::Command];
+    }
+
+    public function getNames(): array
+    {
+        return [MessengerHandlerName::Menu];
+    }
+
+
 }

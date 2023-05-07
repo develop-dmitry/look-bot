@@ -30,13 +30,7 @@ class TelegramController extends Controller
     public function __construct(
         protected MessengerInterface                 $messenger,
         protected MessengerContainerFactoryInterface $messengerContainerFactory,
-        protected LoggerInterface                    $logger,
-        protected MessengerKeyboardFactoryInterface  $keyboardFactory,
-        protected MessengerButtonFactoryInterface    $buttonFactory,
-        protected MessengerOptionFactoryInterface    $optionFactory,
-        protected GetWeatherInterface                $getWeather,
-        protected SaveClientInterface                $saveClient,
-        protected DictionaryInterface                $dictionary
+        protected LoggerInterface                    $logger
     ) {
         $this->handlers = $this->messengerContainerFactory->makeHandlerContainer();
     }
@@ -52,78 +46,21 @@ class TelegramController extends Controller
 
     protected function initHandlers(): void
     {
-        $this->addHandler(
-            MessengerHandlerName::Start,
-            MessengerHandlerType::Command,
-            new WelcomeMessengerHandler(
-                $this->logger,
-                $this->keyboardFactory,
-                $this->buttonFactory,
-                $this->optionFactory,
-                $this->dictionary
-            )
-        );
+        $this->addHandler(app()->make(WelcomeMessengerHandler::class));
 
-        $this->addHandler(
-            MessengerHandlerName::Menu,
-            MessengerHandlerType::Command,
-            new MenuMessengerHandler(
-                $this->logger,
-                $this->keyboardFactory,
-                $this->buttonFactory,
-                $this->optionFactory,
-                $this->dictionary
-            )
-        );
+        $this->addHandler(app()->make(MenuMessengerHandler::class));
 
-        $this->addHandler(
-            MessengerHandlerName::Support,
-            MessengerHandlerType::Text,
-            new SupportMessengerHandler($this->dictionary)
-        );
+        $this->addHandler(app()->make(SupportMessengerHandler::class));
 
-        $this->addHandler(
-            MessengerHandlerName::AddSupportMessage,
-            MessengerHandlerType::Message,
-            new AddSupportMessengerHandler($this->dictionary)
-        );
+        $this->addHandler(app()->make(AddSupportMessengerHandler::class));
 
-        $getWeatherMessengerHandler = new GetWeatherMessengerHandler(
-            $this->getWeather,
-            $this->optionFactory,
-            $this->keyboardFactory,
-            $this->buttonFactory,
-            $this->saveClient,
-            $this->logger,
-            $this->dictionary
-        );
-
-        $this->addHandler(
-            MessengerHandlerName::GetWeatherText,
-            MessengerHandlerType::Text,
-            $getWeatherMessengerHandler
-        );
-
-        $this->addHandler(
-            MessengerHandlerName::GetWeatherText,
-            MessengerHandlerType::Message,
-            $getWeatherMessengerHandler
-        );
-
-        $this->addHandler(
-            MessengerHandlerName::GetWeatherCallbackQuery,
-            MessengerHandlerType::CallbackQuery,
-            $getWeatherMessengerHandler
-        );
+        $this->addHandler(app()->make(GetWeatherMessengerHandler::class));
     }
 
-    protected function addHandler(
-        MessengerHandlerName $name,
-        MessengerHandlerType $type,
-        MessengerHandlerInterface $handler
-    ): void {
+    protected function addHandler(MessengerHandlerInterface $handler): void
+    {
         try {
-            $this->handlers->addHandler($name, $type, $handler);
+            $this->handlers->addHandler($handler);
         } catch (MessengerHandlerAlreadyExistsException $exception) {
             $this->logger->emergency('Дублирование обработчика', ['exception' => $exception]);
         }

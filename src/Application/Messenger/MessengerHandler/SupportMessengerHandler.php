@@ -7,6 +7,7 @@ namespace Look\Application\Messenger\MessengerHandler;
 use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
 use Look\Application\Messenger\MessengerVisual\MessengerVisualInterface;
 
@@ -27,4 +28,16 @@ class SupportMessengerHandler implements MessengerHandlerInterface
         $context->getMessengerUser()?->setMessageHandler(MessengerHandlerName::AddSupportMessage);
         $visual->sendMessage($this->dictionary->getTranslate('telegram.support.send_message'));
     }
+
+    public function getTypes(): array
+    {
+        return [MessengerHandlerType::Text];
+    }
+
+    public function getNames(): array
+    {
+        return [MessengerHandlerName::Support];
+    }
+
+
 }
