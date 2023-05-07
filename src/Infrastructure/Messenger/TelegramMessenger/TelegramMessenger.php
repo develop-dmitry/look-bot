@@ -9,7 +9,6 @@ use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerContainerInterface;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
 use Look\Application\Messenger\MessengerInterface;
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestFactoryInterface;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\Interface\SaveMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\SaveMessengerUserRequest;
@@ -35,13 +34,11 @@ class TelegramMessenger implements MessengerInterface
         protected SaveMessengerUserInterface $saveMessengerUser,
         protected LoggerInterface $logger,
         GeoLocationBuilderInterface $geoLocationBuilder,
-        MessengerRequestFactoryInterface $messengerRequestFactory,
         IdentifyClientInterface $identifyClient,
         FindMessengerUserInterface $findMessengerUser
     ) {
         $this->visual = new TelegramMessengerVisual($this->bot, $this->logger);
         $this->context = new TelegramMessengerContext(
-            $messengerRequestFactory,
             $identifyClient,
             $findMessengerUser,
             $this->bot,

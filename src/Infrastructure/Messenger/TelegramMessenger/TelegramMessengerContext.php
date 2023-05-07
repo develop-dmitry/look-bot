@@ -9,8 +9,8 @@ use Look\Application\Builder\Exception\NoRequiredPropertiesException;
 use Look\Application\Client\IdentifyClient\IdentifyClientRequest;
 use Look\Application\Client\IdentifyClient\Interface\IdentifyClientInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestFactoryInterface;
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestInterface;
+use Look\Application\Messenger\MessengerRequest\MessengerRequest;
+use Look\Application\Messenger\MessengerRequest\MessengerRequestInterface;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\FindMessengerUserRequest;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Domain\Client\Interface\ClientInterface;
@@ -31,7 +31,6 @@ class TelegramMessengerContext implements MessengerContextInterface
     protected bool $initialized = false;
 
     public function __construct(
-        protected MessengerRequestFactoryInterface $messengerRequestFactory,
         protected IdentifyClientInterface $identifyClient,
         protected FindMessengerUserInterface $findMessengerUser,
         protected Nutgram $bot,
@@ -89,14 +88,14 @@ class TelegramMessengerContext implements MessengerContextInterface
 
     protected function initRequest(): void
     {
-        $this->request = $this->messengerRequestFactory->makeMessengerRequest();
+        $request = new MessengerRequest();
 
         $message = $this->bot->message()?->text;
         $callbackQuery = $this->bot->callbackQuery()?->data;
         $location = $this->bot->message()?->location;
 
-        $this->request->setMessage($message ?? '');
-        $this->request->setCallbackQuery(($callbackQuery) ? Json::decode($callbackQuery) : []);
+        $request->setMessage($message ?? '');
+        $request->setCallbackQuery(($callbackQuery) ? Json::decode($callbackQuery) : []);
 
         if ($location) {
             try {
@@ -105,7 +104,7 @@ class TelegramMessengerContext implements MessengerContextInterface
                     ->setLon($location->longitude)
                     ->make();
 
-                $this->request->setGeoLocation($geoLocation);
+                $request->setGeoLocation($geoLocation);
             } catch (NoRequiredPropertiesException|InvalidValueException $exception) {
                 $this->logger->emergency('Не удалось создать геолокацию из запроса', [
                     'location' => $location,
@@ -113,6 +112,8 @@ class TelegramMessengerContext implements MessengerContextInterface
                 ]);
             }
         }
+
+        $this->request = $request;
     }
 
     protected function identifyClient(): bool

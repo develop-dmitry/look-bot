@@ -19,8 +19,6 @@ use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFact
 use Look\Application\Messenger\MessengerKeyboard\MessengerKeyboardFactory;
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionFactoryInterface;
 use Look\Application\Messenger\MessengerOption\MessengerOptionFactory;
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestFactoryInterface;
-use Look\Application\Messenger\MessengerRequest\MessengerRequestFactory;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\FindMessengerUserUseCase;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\Interface\SaveMessengerUserInterface;
@@ -74,7 +72,6 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(MessengerButtonFactoryInterface::class, MessengerButtonFactory::class);
         $this->app->bind(MessengerKeyboardFactoryInterface::class, MessengerKeyboardFactory::class);
-        $this->app->bind(MessengerRequestFactoryInterface::class, MessengerRequestFactory::class);
         $this->app->bind(MessengerContainerFactoryInterface::class, MessengerContainerFactory::class);
         $this->app->bind(MessengerOptionFactoryInterface::class, MessengerOptionFactory::class);
         $this->app->bind(MessengerUserBuilderInterface::class, MessengerUserBuilder::class);

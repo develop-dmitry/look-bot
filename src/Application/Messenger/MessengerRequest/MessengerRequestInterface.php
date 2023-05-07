@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Look\Application\Messenger\MessengerRequest\Interface;
+namespace Look\Application\Messenger\MessengerRequest;
 
 use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
 

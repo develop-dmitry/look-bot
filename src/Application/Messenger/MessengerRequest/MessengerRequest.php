@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerRequest;
 
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestInterface;
 use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
 
 class MessengerRequest implements MessengerRequestInterface

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerContext;
 
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestInterface;
+use Look\Application\Messenger\MessengerRequest\MessengerRequestInterface;
 use Look\Domain\Client\Interface\ClientInterface;
 use Look\Domain\MessengerUser\Interface\MessengerUserInterface;
 
