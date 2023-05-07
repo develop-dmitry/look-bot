@@ -105,12 +105,12 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
         if ($response->isSuccess()) {
             $weather = $response->getWeather();
 
-            $timeOfDayText = match ($timeOfDay->getTimeOfDay()) {
+            $timeOfDayText = mb_strtolower(match ($timeOfDay->getTimeOfDay()) {
                 $timeOfDay::Afternoon => strtolower($this->dictionary->getTranslate('common.afternoon')),
-                $timeOfDay::Evening => strtolower($this->dictionary->getTranslate('evening')),
-                $timeOfDay::Night => strtolower($this->dictionary->getTranslate('night')),
+                $timeOfDay::Evening => strtolower($this->dictionary->getTranslate('common.evening')),
+                $timeOfDay::Night => strtolower($this->dictionary->getTranslate('common.night')),
                 default => ''
-            };
+            });
 
             return $this->dictionary->getTranslate('telegram.get_weather.weather_message', [
                 'address' => $weather?->getGeoLocation()->getAddress()?->getValue(),
