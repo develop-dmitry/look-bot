@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Look\Infrastructure\Messenger\TelegramMessenger;
 
-use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterfaceMessenger;
+use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterface;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
 use Look\Application\Messenger\MessengerKeyboard\MessengerKeyboardType;
 use Look\Application\Messenger\MessengerOption\MessengerButtonOption\MessengerButtonOptionName;
 use Look\Application\Messenger\MessengerOption\MessengerKeyboardOption\MessengerKeyboardOptionName;
 use Look\Application\Messenger\MessengerVisual\MessengerVisualInterface;
+use Psr\Log\LoggerInterface;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
@@ -26,7 +27,8 @@ class TelegramMessengerVisual implements MessengerVisualInterface
     protected bool $editMessage = false;
 
     public function __construct(
-        protected Nutgram $bot
+        protected Nutgram $bot,
+        protected LoggerInterface $logger
     ) {
     }
 
@@ -36,7 +38,7 @@ class TelegramMessengerVisual implements MessengerVisualInterface
         $this->editMessage = $editMessage;
     }
 
-    public function sendKeyboard(MessengerKeyboardInterface $keyboard): void
+    public function sendKeyboard(?MessengerKeyboardInterface $keyboard): void
     {
         $this->keyboard = $keyboard;
     }
@@ -54,17 +56,17 @@ class TelegramMessengerVisual implements MessengerVisualInterface
 
     protected function getMessageOptions(): array
     {
-        $options = [];
-
-        if ($this->keyboard) {
-            $options['reply_markup'] = $this->adaptKeyboard();
-        }
-
-        return $options;
+        return [
+            'reply_markup' => $this->adaptKeyboard()
+        ];
     }
 
     protected function adaptKeyboard(): ReplyKeyboardMarkup|InlineKeyboardMarkup|null
     {
+        if (!$this->keyboard) {
+            return null;
+        }
+
         return match ($this->keyboard->getType()) {
             MessengerKeyboardType::Inline => $this->makeInlineKeyboardMarkup($this->keyboard),
             MessengerKeyboardType::Reply => $this->makeReplyKeyboardMarkup($this->keyboard)
@@ -111,7 +113,7 @@ class TelegramMessengerVisual implements MessengerVisualInterface
         return $replyKeyboard;
     }
 
-    protected function makeInlineKeyboardButton(MessengerButtonInterfaceMessenger $button): InlineKeyboardButton
+    protected function makeInlineKeyboardButton(MessengerButtonInterface $button): InlineKeyboardButton
     {
         return new InlineKeyboardButton(
             $button->getText(),
@@ -126,7 +128,7 @@ class TelegramMessengerVisual implements MessengerVisualInterface
         );
     }
 
-    protected function makeKeyboardButton(MessengerButtonInterfaceMessenger $button): KeyboardButton
+    protected function makeKeyboardButton(MessengerButtonInterface $button): KeyboardButton
     {
         return new KeyboardButton(
             $button->getText(),

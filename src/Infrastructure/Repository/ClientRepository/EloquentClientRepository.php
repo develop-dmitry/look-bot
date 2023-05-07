@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Look\Infrastructure\Repository\ClientRepository;
 
 use App\Models\Client;
+use Look\Application\Builder\Exception\NoRequiredPropertiesException;
 use Look\Domain\Client\Exception\ClientNotFoundException;
 use Look\Domain\Client\Interface\ClientBuilderInterface;
 use Look\Domain\Client\Interface\ClientInterface;
 use Look\Domain\Client\Interface\ClientRepositoryInterface;
 use Look\Domain\Exception\RepositoryException;
+use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Psr\Log\LoggerInterface;
 
@@ -17,6 +19,7 @@ class EloquentClientRepository implements ClientRepositoryInterface
 {
     public function __construct(
         protected ClientBuilderInterface $clientBuilder,
+        protected GeoLocationBuilderInterface $geoLocationBuilder,
         protected LoggerInterface $logger
     ) {
     }
@@ -46,16 +49,41 @@ class EloquentClientRepository implements ClientRepositoryInterface
         $client->setId($clientModel->id);
     }
 
+    public function saveClient(ClientInterface $client): void
+    {
+        $clientModel = Client::find($client->getId()->getValue());
+
+        if (!$clientModel) {
+            throw new ClientNotFoundException("Client with id {$client->getId()->getValue()} not found");
+        }
+
+        $this->fillModel($client, $clientModel);
+
+        if (!$clientModel->save()) {
+            throw new RepositoryException('Failed to save client');
+        }
+    }
+
     /**
      * @throws RepositoryException
      */
     protected function makeEntity(Client $client): ClientInterface
     {
         try {
+            $geoLocation = null;
+
+            if ($client->lat && $client->lon) {
+                $geoLocation = $this->geoLocationBuilder
+                    ->setLon($client->lon)
+                    ->setLat($client->lat)
+                    ->make();
+            }
+
             return $this->clientBuilder
                 ->fromArray($client->toArray())
+                ->setGeoLocation($geoLocation)
                 ->make();
-        } catch (InvalidValueException $exception) {
+        } catch (InvalidValueException|NoRequiredPropertiesException $exception) {
             $this->logger->emergency('Не удалось создать сущность из модели', [
                 'exception' => $exception,
                 'model' => $client
@@ -69,7 +97,9 @@ class EloquentClientRepository implements ClientRepositoryInterface
     {
         $clientModel->fill([
             'user_id' => $client->getUserId()?->getValue(),
-            'telegram_id' => $client->getTelegramId()?->getValue()
+            'telegram_id' => $client->getTelegramId()?->getValue(),
+            'lat' => $client->getGeoLocation()?->getLat()->getValue(),
+            'lon' => $client->getGeoLocation()?->getLon()->getValue()
         ]);
     }
 }

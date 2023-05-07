@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerKeyboard;
 
-use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterfaceMessenger;
+use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterface;
 use Look\Application\Messenger\MessengerContainer\Interface\MessengerOptionContainerInterface;
 use Look\Application\Messenger\MessengerKeyboard\Exception\FailedAddRowKeyboardException;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
@@ -15,15 +15,15 @@ abstract class AbstractMessengerKeyboard implements MessengerKeyboardInterface
     use HasMessengerOption;
 
     /**
-     * @var MessengerButtonInterfaceMessenger[][]
+     * @var MessengerButtonInterface[][]
      */
-    protected array $rows;
+    protected array $rows = [];
 
     public function __construct(MessengerOptionContainerInterface $optionContainer) {
         $this->setOptionContainer($optionContainer);
     }
 
-    public function addRow(MessengerButtonInterfaceMessenger ...$buttons): void
+    public function addRow(MessengerButtonInterface ...$buttons): self
     {
         foreach ($buttons as $button) {
             if (!$this->buttonCanBeAdded($button)) {
@@ -37,6 +37,8 @@ abstract class AbstractMessengerKeyboard implements MessengerKeyboardInterface
         }
 
         $this->rows[] = $buttons;
+
+        return $this;
     }
 
     public function getRows(): array
@@ -44,5 +46,5 @@ abstract class AbstractMessengerKeyboard implements MessengerKeyboardInterface
         return $this->rows;
     }
 
-    abstract protected function buttonCanBeAdded(MessengerButtonInterfaceMessenger $button): bool;
+    abstract protected function buttonCanBeAdded(MessengerButtonInterface $button): bool;
 }

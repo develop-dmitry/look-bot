@@ -14,7 +14,7 @@ interface MessengerUserInterface extends UseIdInterface
      * @param MessengerHandlerName|null $messengerHandler
      * @return static
      */
-    public function setMessengerHandler(?MessengerHandlerName $messengerHandler): static;
+    public function setMessageHandler(?MessengerHandlerName $messengerHandler): static;
 
     /**
      * @return MessengerHandlerName|null

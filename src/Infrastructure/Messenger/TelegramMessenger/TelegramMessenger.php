@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Look\Infrastructure\Messenger\TelegramMessenger;
 
 use Look\Application\Client\IdentifyClient\Interface\IdentifyClientInterface;
+use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerContainerInterface;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
 use Look\Application\Messenger\MessengerInterface;
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestFactoryInterface;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\Interface\SaveMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\SaveMessengerUserRequest;
+use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Psr\Log\LoggerInterface;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\RunningMode\Webhook;
@@ -33,17 +34,21 @@ class TelegramMessenger implements MessengerInterface
         protected Nutgram $bot,
         protected SaveMessengerUserInterface $saveMessengerUser,
         protected LoggerInterface $logger,
-        MessengerRequestFactoryInterface $messengerRequestFactory,
+        protected DictionaryInterface $dictionary,
+        GeoLocationBuilderInterface $geoLocationBuilder,
         IdentifyClientInterface $identifyClient,
-        FindMessengerUserInterface $findMessengerUser,
+        FindMessengerUserInterface $findMessengerUser
     ) {
-        $this->visual = new TelegramMessengerVisual($this->bot);
+        $this->visual = new TelegramMessengerVisual($this->bot, $this->logger);
+
         $this->context = new TelegramMessengerContext(
-            $messengerRequestFactory,
             $identifyClient,
             $findMessengerUser,
-            $this->bot
+            $this->bot,
+            $geoLocationBuilder,
+            $this->logger
         );
+
         $this->handlerManager = new TelegramMessengerHandlerManager(
             $this->context,
             $this->bot,
@@ -73,14 +78,14 @@ class TelegramMessenger implements MessengerInterface
         if ($handler) {
             try {
                 if ($type === MessengerHandlerType::Message && $this->context->isIdentifiedMessengerUser()) {
-                    $this->context->getMessengerUser()?->setMessengerHandler(null);
+                    $this->context->getMessengerUser()?->setMessageHandler(null);
                 }
 
                 $handler->handle($this->context, $this->visual);
 
                 $this->saveMessengerUser();
             } catch (Throwable $exception) {
-                $this->visual->sendMessage('Технические неполадки, попробуйте позднее');
+                $this->visual->sendMessage($this->dictionary->getTranslate('telegram.network_error'));
 
                 $this->logger->emergency('Непредвиденная ошибка', [
                     'exception' => $exception,
@@ -88,7 +93,7 @@ class TelegramMessenger implements MessengerInterface
                 ]);
             }
         } else {
-            $this->visual->sendMessage('Я не знаю такой команды :(');
+            $this->visual->sendMessage($this->dictionary->getTranslate('telegram.unknown_handler'));
         }
 
         return $this->visual->makeMessage();

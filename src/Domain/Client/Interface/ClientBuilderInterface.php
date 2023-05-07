@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Domain\Client\Interface;
 
+use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
 
 interface ClientBuilderInterface
@@ -25,6 +26,12 @@ interface ClientBuilderInterface
      * @return static
      */
     public function setUserId(?int $userId): static;
+
+    /**
+     * @param GeoLocationInterface|null $geoLocation
+     * @return $this
+     */
+    public function setGeoLocation(?GeoLocationInterface $geoLocation): static;
 
     /**
      * @param array $data

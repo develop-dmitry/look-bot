@@ -15,18 +15,19 @@ class MessengerHandlerContainer implements MessengerHandlerContainerInterface
 {
     protected array $handlers = [];
 
-    public function addHandler(
-        MessengerHandlerName $name,
-        MessengerHandlerType $type,
-        MessengerHandlerInterface $handler
-    ): void {
-        if ($this->hasHandler($name, $type)) {
-            throw new MessengerHandlerAlreadyExistsException(
-                "Handler for type $type->value and with name $name->value already exists"
-            );
-        }
+    public function addHandler(MessengerHandlerInterface $handler): void
+    {
+        foreach ($handler->getTypes() as $type) {
+            foreach ($handler->getNames() as $name) {
+                if ($this->hasHandler($name, $type)) {
+                    throw new MessengerHandlerAlreadyExistsException(
+                        "Handler for type $type->value and with name $name->value already exists"
+                    );
+                }
 
-        $this->handlers[$type->value][$name->value] = $handler;
+                $this->handlers[$type->value][$name->value] = $handler;
+            }
+        }
     }
 
     public function getHandler(MessengerHandlerName $name, MessengerHandlerType $type): MessengerHandlerInterface

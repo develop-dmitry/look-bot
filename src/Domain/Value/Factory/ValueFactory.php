@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Look\Domain\Value\Factory;
 
+use Look\Domain\Value\Address\Address;
+use Look\Domain\Value\Address\Interface\AddressInterface;
+use Look\Domain\Value\Coordinate\Coordinate;
+use Look\Domain\Value\Coordinate\Interface\CoordinateInterface;
+use Look\Domain\Value\Exception\InvalidValueException;
 use Look\Domain\Value\Id\Id;
 use Look\Domain\Value\Id\Interface\IdInterface;
 use Look\Domain\Value\Level\Interface\LevelInterface;
@@ -40,5 +45,15 @@ class ValueFactory implements ValueFactoryInterface
     public function makeTemperature(int $temperature): TemperatureInterface
     {
         return new Temperature($temperature);
+    }
+
+    public function makeCoordinate(float $coordinate): CoordinateInterface
+    {
+        return new Coordinate($coordinate);
+    }
+
+    public function makeAddress(string $address): AddressInterface
+    {
+        return new Address($address);
     }
 }

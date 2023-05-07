@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Look\Domain\Value\Factory;
 
+use Look\Domain\Value\Address\Interface\AddressInterface;
+use Look\Domain\Value\Coordinate\Interface\CoordinateInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Look\Domain\Value\Id\Interface\IdInterface;
 use Look\Domain\Value\Level\Interface\LevelInterface;
@@ -47,4 +49,18 @@ interface ValueFactoryInterface
      * @throws InvalidValueException
      */
     public function makeTemperature(int $temperature): TemperatureInterface;
+
+    /**
+     * @param float $coordinate
+     * @return CoordinateInterface
+     * @throws InvalidValueException
+     */
+    public function makeCoordinate(float $coordinate): CoordinateInterface;
+
+    /**
+     * @param string $address
+     * @return AddressInterface
+     * @throws InvalidValueException
+     */
+    public function makeAddress(string $address): AddressInterface;
 }

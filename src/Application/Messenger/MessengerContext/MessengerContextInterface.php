@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerContext;
 
-use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestInterface;
+use Look\Application\Messenger\MessengerRequest\MessengerRequestInterface;
 use Look\Domain\Client\Interface\ClientInterface;
 use Look\Domain\MessengerUser\Interface\MessengerUserInterface;
 
@@ -16,14 +16,14 @@ interface MessengerContextInterface
     public function getRequest(): MessengerRequestInterface;
 
     /**
-     * @return ClientInterface|null
+     * @return ClientInterface
      */
-    public function getClient(): ?ClientInterface;
+    public function getClient(): ClientInterface;
 
     /**
-     * @return MessengerUserInterface|null
+     * @return MessengerUserInterface
      */
-    public function getMessengerUser(): ?MessengerUserInterface;
+    public function getMessengerUser(): MessengerUserInterface;
 
     /**
      * @return bool

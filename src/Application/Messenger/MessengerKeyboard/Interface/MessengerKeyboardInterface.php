@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerKeyboard\Interface;
 
-use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterfaceMessenger;
+use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterface;
 use Look\Application\Messenger\MessengerKeyboard\Exception\FailedAddRowKeyboardException;
 use Look\Application\Messenger\MessengerKeyboard\MessengerKeyboardType;
 use Look\Application\Messenger\MessengerOption\Interface\UseMessengerOptionInterface;
@@ -12,14 +12,14 @@ use Look\Application\Messenger\MessengerOption\Interface\UseMessengerOptionInter
 interface MessengerKeyboardInterface extends UseMessengerOptionInterface
 {
     /**
-     * @param MessengerButtonInterfaceMessenger ...$buttons
-     * @return void
+     * @param MessengerButtonInterface ...$buttons
+     * @return MessengerKeyboardInterface
      * @throws FailedAddRowKeyboardException
      */
-    public function addRow(MessengerButtonInterfaceMessenger ...$buttons): void;
+    public function addRow(MessengerButtonInterface ...$buttons): self;
 
     /**
-     * @return MessengerButtonInterfaceMessenger[][]
+     * @return MessengerButtonInterface[][]
      */
     public function getRows(): array;
 

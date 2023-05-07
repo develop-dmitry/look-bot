@@ -13,16 +13,10 @@ interface MessengerHandlerContainerInterface
 {
     /**
      * @param MessengerHandlerInterface $handler
-     * @param MessengerHandlerName $name
-     * @param MessengerHandlerType $type
      * @return void
      * @throws MessengerHandlerAlreadyExistsException
      */
-    public function addHandler(
-        MessengerHandlerName $name,
-        MessengerHandlerType $type,
-        MessengerHandlerInterface $handler
-    ): void;
+    public function addHandler(MessengerHandlerInterface $handler): void;
 
     /**
      * @param MessengerHandlerName $name

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Look\Application\Messenger\MessengerHandler\Trait\Menu;
+namespace Look\Application\Messenger\MessengerHandler\Trait\UseMainMenu;
 
-use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterfaceMessenger;
+use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterface;
 use Look\Application\Messenger\MessengerKeyboard\Exception\FailedAddRowKeyboardException;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
 use Look\Application\Messenger\MessengerOption\Exception\FailedAddOptionException;
@@ -13,13 +13,9 @@ use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionValueExc
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionInterface;
 use Look\Application\Messenger\MessengerOption\MessengerKeyboardOption\MessengerKeyboardOptionName;
 
-trait HasMenu
+trait HasMainMenu
 {
-    /**
-     * @return MessengerKeyboardInterface
-     * @throws FailedBuildMenuException
-     */
-    public function getMenuKeyboard(): MessengerKeyboardInterface
+    public function getMainMenuKeyboard(): ?MessengerKeyboardInterface
     {
         try {
             $keyboard = $this->keyboardFactory->makeReplyKeyboard();
@@ -40,20 +36,22 @@ trait HasMenu
             FailedAddOptionException|
             FailedSetOptionValueException $exception
         ) {
-            throw new FailedBuildMenuException($exception->getMessage());
+            $this->logger->emergency('Не удалось собрать главное меню', ['exception' => $exception]);
+
+            return null;
         }
     }
 
     /**
-     * @return MessengerButtonInterfaceMessenger[]
+     * @return MessengerButtonInterface[]
      */
     protected function getMenuButtons(): array
     {
         $buttons[] = $this->buttonFactory->makeReplyButton()
-            ->setText(__('telegram.menu.about'));
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.get_weather'));
 
         $buttons[] = $this->buttonFactory->makeReplyButton()
-            ->setText(__('telegram.menu.support'));
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.support'));
 
         return $buttons;
     }

@@ -13,4 +13,8 @@ enum MessengerHandlerName: string
     case Support = 'Сообщить о проблеме';
 
     case AddSupportMessage = 'add_support_message';
+
+    case GetWeatherText = 'Получить погоду';
+
+    case GetWeatherCallbackQuery = 'get_weather';
 }
