@@ -16,6 +16,7 @@ use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\KeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardMarkup;
+use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardRemove;
 use SergiX44\Nutgram\Telegram\Types\Message\Message;
 
 class TelegramMessengerVisual implements MessengerVisualInterface
@@ -61,10 +62,10 @@ class TelegramMessengerVisual implements MessengerVisualInterface
         ];
     }
 
-    protected function adaptKeyboard(): ReplyKeyboardMarkup|InlineKeyboardMarkup|null
+    protected function adaptKeyboard(): ReplyKeyboardMarkup|InlineKeyboardMarkup|ReplyKeyboardRemove|null
     {
         if (!$this->keyboard) {
-            return null;
+            return ReplyKeyboardRemove::make(true);
         }
 
         return match ($this->keyboard->getType()) {

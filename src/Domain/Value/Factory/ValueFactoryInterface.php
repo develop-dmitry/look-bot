@@ -9,6 +9,7 @@ use Look\Domain\Value\Coordinate\Interface\CoordinateInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Look\Domain\Value\Id\Interface\IdInterface;
 use Look\Domain\Value\Level\Interface\LevelInterface;
+use Look\Domain\Value\Message\Interface\MessageInterface;
 use Look\Domain\Value\Name\Interface\NameInterface;
 use Look\Domain\Value\Photo\Interface\PhotoInterface;
 use Look\Domain\Value\Temperature\TemperatureInterface;
@@ -63,4 +64,11 @@ interface ValueFactoryInterface
      * @throws InvalidValueException
      */
     public function makeAddress(string $address): AddressInterface;
+
+    /**
+     * @param string $message
+     * @return MessageInterface
+     * @throws InvalidValueException
+     */
+    public function makeMessage(string $message): MessageInterface;
 }
