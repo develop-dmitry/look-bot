@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerHandler;
 
+use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
@@ -23,14 +24,15 @@ class WelcomeMessengerHandler implements MessengerHandlerInterface, UseMenuInter
         protected LoggerInterface $logger,
         protected MessengerKeyboardFactoryInterface $keyboardFactory,
         protected MessengerButtonFactoryInterface $buttonFactory,
-        protected MessengerOptionFactoryInterface $optionFactory
+        protected MessengerOptionFactoryInterface $optionFactory,
+        protected DictionaryInterface $dictionary
     ) {
     }
 
     public function handle(MessengerContextInterface $context, MessengerVisualInterface $visual): void
     {
         try {
-            $visual->sendMessage(__('telegram.welcome_message'));
+            $visual->sendMessage($this->dictionary->getTranslate('telegram.welcome_message'));
             $visual->sendKeyboard($this->getMenuKeyboard());
         } catch (FailedBuildMenuException $exception) {
             $this->logger->emergency('Не удалось сформировать меню', ['exception' => $exception]);

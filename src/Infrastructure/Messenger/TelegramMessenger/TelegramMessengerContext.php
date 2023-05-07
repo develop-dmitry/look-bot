@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Look\Infrastructure\Messenger\TelegramMessenger;
 
 use Illuminate\Database\Eloquent\Casts\Json;
+use Look\Application\Builder\Exception\NoRequiredPropertiesException;
 use Look\Application\Client\IdentifyClient\IdentifyClientRequest;
 use Look\Application\Client\IdentifyClient\Interface\IdentifyClientInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
@@ -13,7 +14,10 @@ use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestInterf
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\FindMessengerUserRequest;
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Domain\Client\Interface\ClientInterface;
+use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Look\Domain\MessengerUser\Interface\MessengerUserInterface;
+use Look\Domain\Value\Exception\InvalidValueException;
+use Psr\Log\LoggerInterface;
 use SergiX44\Nutgram\Nutgram;
 
 class TelegramMessengerContext implements MessengerContextInterface
@@ -30,7 +34,9 @@ class TelegramMessengerContext implements MessengerContextInterface
         protected MessengerRequestFactoryInterface $messengerRequestFactory,
         protected IdentifyClientInterface $identifyClient,
         protected FindMessengerUserInterface $findMessengerUser,
-        protected Nutgram $bot
+        protected Nutgram $bot,
+        protected GeoLocationBuilderInterface $geoLocationBuilder,
+        protected LoggerInterface $logger
     ) {
     }
 
@@ -87,9 +93,26 @@ class TelegramMessengerContext implements MessengerContextInterface
 
         $message = $this->bot->message()?->text;
         $callbackQuery = $this->bot->callbackQuery()?->data;
+        $location = $this->bot->message()?->location;
 
         $this->request->setMessage($message ?? '');
         $this->request->setCallbackQuery(($callbackQuery) ? Json::decode($callbackQuery) : []);
+
+        if ($location) {
+            try {
+                $geoLocation = $this->geoLocationBuilder
+                    ->setLat($location->latitude)
+                    ->setLon($location->longitude)
+                    ->make();
+
+                $this->request->setGeoLocation($geoLocation);
+            } catch (NoRequiredPropertiesException|InvalidValueException $exception) {
+                $this->logger->emergency('Не удалось создать геолокацию из запроса', [
+                    'location' => $location,
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
+        }
     }
 
     protected function identifyClient(): bool

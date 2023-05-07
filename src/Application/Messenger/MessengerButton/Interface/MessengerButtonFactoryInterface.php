@@ -6,7 +6,7 @@ namespace Look\Application\Messenger\MessengerButton\Interface;
 
 interface MessengerButtonFactoryInterface
 {
-    public function makeInlineButton(): MessengerButtonInterfaceMessenger;
+    public function makeInlineButton(): MessengerButtonInterface;
 
-    public function makeReplyButton(): MessengerButtonInterfaceMessenger;
+    public function makeReplyButton(): MessengerButtonInterface;
 }

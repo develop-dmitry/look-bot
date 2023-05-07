@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerHandler\Trait\Menu;
 
-use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterfaceMessenger;
+use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterface;
+use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
 use Look\Application\Messenger\MessengerKeyboard\Exception\FailedAddRowKeyboardException;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
 use Look\Application\Messenger\MessengerOption\Exception\FailedAddOptionException;
 use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionNameException;
 use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionValueException;
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionInterface;
+use Look\Application\Messenger\MessengerOption\MessengerButtonOption\MessengerButtonOptionName;
 use Look\Application\Messenger\MessengerOption\MessengerKeyboardOption\MessengerKeyboardOptionName;
 
 trait HasMenu
@@ -45,15 +47,18 @@ trait HasMenu
     }
 
     /**
-     * @return MessengerButtonInterfaceMessenger[]
+     * @return MessengerButtonInterface[]
      */
     protected function getMenuButtons(): array
     {
         $buttons[] = $this->buttonFactory->makeReplyButton()
-            ->setText(__('telegram.menu.about'));
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.about'));
 
         $buttons[] = $this->buttonFactory->makeReplyButton()
-            ->setText(__('telegram.menu.support'));
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.support'));
+
+        $buttons[] = $this->buttonFactory->makeReplyButton()
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.get_weather'));
 
         return $buttons;
     }

@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Look\Application\Client\SaveClient\Interface\SaveClientInterface;
+use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerContainer\Interface\MessengerContainerFactoryInterface;
 use Look\Application\Messenger\MessengerHandler\AddSupportMessengerHandler;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Exception\MessengerHandlerAlreadyExistsException;
+use Look\Application\Messenger\MessengerHandler\GetWeatherMessengerHandler;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerContainerInterface;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
 use Look\Application\Messenger\MessengerHandler\MenuMessengerHandler;
@@ -17,6 +20,7 @@ use Look\Application\Messenger\MessengerHandler\WelcomeMessengerHandler;
 use Look\Application\Messenger\MessengerInterface;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFactoryInterface;
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionFactoryInterface;
+use Look\Application\Weather\GetWeather\Interface\GetWeatherInterface;
 use Psr\Log\LoggerInterface;
 
 class TelegramController extends Controller
@@ -29,7 +33,10 @@ class TelegramController extends Controller
         protected LoggerInterface                    $logger,
         protected MessengerKeyboardFactoryInterface  $keyboardFactory,
         protected MessengerButtonFactoryInterface    $buttonFactory,
-        protected MessengerOptionFactoryInterface $optionFactory
+        protected MessengerOptionFactoryInterface    $optionFactory,
+        protected GetWeatherInterface                $getWeather,
+        protected SaveClientInterface                $saveClient,
+        protected DictionaryInterface                $dictionary
     ) {
         $this->handlers = $this->messengerContainerFactory->makeHandlerContainer();
     }
@@ -52,7 +59,8 @@ class TelegramController extends Controller
                 $this->logger,
                 $this->keyboardFactory,
                 $this->buttonFactory,
-                $this->optionFactory
+                $this->optionFactory,
+                $this->dictionary
             )
         );
 
@@ -63,20 +71,49 @@ class TelegramController extends Controller
                 $this->logger,
                 $this->keyboardFactory,
                 $this->buttonFactory,
-                $this->optionFactory
+                $this->optionFactory,
+                $this->dictionary
             )
         );
 
         $this->addHandler(
             MessengerHandlerName::Support,
             MessengerHandlerType::Text,
-            new SupportMessengerHandler()
+            new SupportMessengerHandler($this->dictionary)
         );
 
         $this->addHandler(
             MessengerHandlerName::AddSupportMessage,
             MessengerHandlerType::Message,
-            new AddSupportMessengerHandler()
+            new AddSupportMessengerHandler($this->dictionary)
+        );
+
+        $getWeatherMessengerHandler = new GetWeatherMessengerHandler(
+            $this->getWeather,
+            $this->optionFactory,
+            $this->keyboardFactory,
+            $this->buttonFactory,
+            $this->saveClient,
+            $this->logger,
+            $this->dictionary
+        );
+
+        $this->addHandler(
+            MessengerHandlerName::GetWeatherText,
+            MessengerHandlerType::Text,
+            $getWeatherMessengerHandler
+        );
+
+        $this->addHandler(
+            MessengerHandlerName::GetWeatherText,
+            MessengerHandlerType::Message,
+            $getWeatherMessengerHandler
+        );
+
+        $this->addHandler(
+            MessengerHandlerName::GetWeatherCallbackQuery,
+            MessengerHandlerType::CallbackQuery,
+            $getWeatherMessengerHandler
         );
     }
 

@@ -39,7 +39,7 @@ class MessengerUserBuilder extends AbstractBuilder implements MessengerUserBuild
             $messengerHandler = MessengerHandlerName::tryFrom($this->getValue('messenger_handler'));
 
             if ($messengerHandler) {
-                $messengerUser->setMessengerHandler($messengerHandler);
+                $messengerUser->setMessageHandler($messengerHandler);
             }
         }
 

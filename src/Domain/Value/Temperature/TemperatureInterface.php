@@ -19,4 +19,9 @@ interface TemperatureInterface
      * @throws InvalidValueException
      */
     public function setValue(int $value): void;
+
+    /**
+     * @return string
+     */
+    public function getFormatValue(): string;
 }

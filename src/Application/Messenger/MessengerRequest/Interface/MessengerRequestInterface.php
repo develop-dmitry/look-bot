@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Look\Application\Messenger\MessengerRequest\Interface;
 
+use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
+
 interface MessengerRequestInterface
 {
     /**
@@ -27,4 +29,15 @@ interface MessengerRequestInterface
      * @return array
      */
     public function getCallbackQuery(): array;
+
+    /**
+     * @param GeoLocationInterface|null $geoLocation
+     * @return self
+     */
+    public function setGeoLocation(?GeoLocationInterface $geoLocation): self;
+
+    /**
+     * @return GeoLocationInterface|null
+     */
+    public function getGeoLocation(): ?GeoLocationInterface;
 }

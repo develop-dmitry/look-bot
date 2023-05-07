@@ -13,21 +13,21 @@ class MessengerUser implements MessengerUserInterface
 {
     use HasId;
 
-    protected ?MessengerHandlerName $messengerHandler = null;
+    protected ?MessengerHandlerName $messageHandler = null;
 
     public function __construct(
         protected ValueFactoryInterface $valueFactory
     ) {
     }
 
-    public function setMessengerHandler(?MessengerHandlerName $messengerHandler): static
+    public function setMessageHandler(?MessengerHandlerName $messengerHandler): static
     {
-        $this->messengerHandler = $messengerHandler;
+        $this->messageHandler = $messengerHandler;
         return $this;
     }
 
     public function getMessageHandler(): ?MessengerHandlerName
     {
-        return $this->messengerHandler;
+        return $this->messageHandler;
     }
 }

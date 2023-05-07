@@ -22,4 +22,11 @@ interface ClientRepositoryInterface
      * @throws RepositoryException
      */
     public function createClient(ClientInterface $client): void;
+
+    /**
+     * @param ClientInterface $client
+     * @return void
+     * @throws RepositoryException|ClientNotFoundException
+     */
+    public function saveClient(ClientInterface $client): void;
 }

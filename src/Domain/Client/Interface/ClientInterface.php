@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Look\Domain\Client\Interface;
 
-use Look\Domain\Exception\RepositoryException;
-use Look\Domain\MessengerUser\Exception\MessengerUserNotFoundException;
-use Look\Domain\MessengerUser\Interface\MessengerUserInterface;
+use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Look\Domain\Value\Id\Id;
 use Look\Domain\Value\Id\Interface\IdInterface;
@@ -37,4 +35,15 @@ interface ClientInterface extends UseIdInterface
      * @return Id|null
      */
     public function getUserId(): ?Id;
+
+    /**
+     * @param GeoLocationInterface|null $geoPosition
+     * @return self
+     */
+    public function setGeoLocation(?GeoLocationInterface $geoPosition): self;
+
+    /**
+     * @return GeoLocationInterface|null
+     */
+    public function getGeoLocation(): ?GeoLocationInterface;
 }

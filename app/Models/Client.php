@@ -9,7 +9,14 @@ class Client extends Model
 {
     protected $fillable = [
         'user_id',
-        'telegram_id'
+        'telegram_id',
+        'lat',
+        'lon'
+    ];
+
+    protected $casts = [
+        'lat' => 'float',
+        'lon' => 'float'
     ];
 
     public function user(): BelongsTo

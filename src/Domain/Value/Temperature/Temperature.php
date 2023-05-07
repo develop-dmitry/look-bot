@@ -24,6 +24,11 @@ class Temperature implements TemperatureInterface
         return $this->value;
     }
 
+    public function getFormatValue(): string
+    {
+        return ($this->value > 0) ? "+$this->value" : (string) $this->value;
+    }
+
     public function setValue(int $value): void
     {
         $this->validate($value);

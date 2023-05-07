@@ -8,6 +8,7 @@ use Look\Application\Builder\AbstractBuilder;
 use Look\Application\Builder\UseId\HasId;
 use Look\Domain\Client\Interface\ClientBuilderInterface;
 use Look\Domain\Client\Interface\ClientInterface;
+use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
 use Look\Domain\Value\Factory\ValueFactoryInterface;
 
 class ClientBuilder extends AbstractBuilder implements ClientBuilderInterface
@@ -31,6 +32,12 @@ class ClientBuilder extends AbstractBuilder implements ClientBuilderInterface
         return $this;
     }
 
+    public function setGeoLocation(?GeoLocationInterface $geoLocation): static
+    {
+        $this->values['geo_location'] = $geoLocation;
+        return $this;
+    }
+
     public function fromArray(array $data): static
     {
         $this->values = array_merge($this->values, $data);
@@ -51,6 +58,10 @@ class ClientBuilder extends AbstractBuilder implements ClientBuilderInterface
 
         if ($this->hasValue('telegram_id')) {
             $client->setTelegramId($this->valueFactory->makeId($this->getValue('telegram_id')));
+        }
+
+        if ($this->hasValue('geo_location')) {
+            $client->setGeoLocation($this->getValue('geo_location'));
         }
 
         $this->reset();

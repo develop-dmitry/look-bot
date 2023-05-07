@@ -13,6 +13,7 @@ use Look\Application\Messenger\MessengerRequest\Interface\MessengerRequestFactor
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\Interface\SaveMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\SaveMessengerUserRequest;
+use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Psr\Log\LoggerInterface;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\RunningMode\Webhook;
@@ -33,16 +34,19 @@ class TelegramMessenger implements MessengerInterface
         protected Nutgram $bot,
         protected SaveMessengerUserInterface $saveMessengerUser,
         protected LoggerInterface $logger,
+        GeoLocationBuilderInterface $geoLocationBuilder,
         MessengerRequestFactoryInterface $messengerRequestFactory,
         IdentifyClientInterface $identifyClient,
-        FindMessengerUserInterface $findMessengerUser,
+        FindMessengerUserInterface $findMessengerUser
     ) {
-        $this->visual = new TelegramMessengerVisual($this->bot);
+        $this->visual = new TelegramMessengerVisual($this->bot, $this->logger);
         $this->context = new TelegramMessengerContext(
             $messengerRequestFactory,
             $identifyClient,
             $findMessengerUser,
-            $this->bot
+            $this->bot,
+            $geoLocationBuilder,
+            $this->logger
         );
         $this->handlerManager = new TelegramMessengerHandlerManager(
             $this->context,
@@ -73,7 +77,7 @@ class TelegramMessenger implements MessengerInterface
         if ($handler) {
             try {
                 if ($type === MessengerHandlerType::Message && $this->context->isIdentifiedMessengerUser()) {
-                    $this->context->getMessengerUser()?->setMessengerHandler(null);
+                    $this->context->getMessengerUser()?->setMessageHandler(null);
                 }
 
                 $handler->handle($this->context, $this->visual);

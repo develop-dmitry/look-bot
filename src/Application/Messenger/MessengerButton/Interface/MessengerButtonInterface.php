@@ -7,11 +7,11 @@ namespace Look\Application\Messenger\MessengerButton\Interface;
 use Look\Application\Messenger\MessengerButton\MessengerButtonType;
 use Look\Application\Messenger\MessengerOption\Interface\UseMessengerOptionInterface;
 
-interface MessengerButtonInterfaceMessenger extends UseMessengerOptionInterface
+interface MessengerButtonInterface extends UseMessengerOptionInterface
 {
     /**
      * @param string $text
-     * @return MessengerButtonInterfaceMessenger
+     * @return MessengerButtonInterface
      */
     public function setText(string $text): self;
 

@@ -39,13 +39,18 @@ class TelegramMessengerHandlerManager
 
         $this->bot->onCallbackQuery(fn () => $executeHandler(
             $this->findHandler([$this, 'getCallbackQueryHandler']),
-            MessengerHandlerType::CallbackQuery)
-        );
+            MessengerHandlerType::CallbackQuery
+        ));
 
         $this->bot->onMessage(fn () => $executeHandler(
             $this->findHandler([$this, 'getMessageHandler']),
-            MessengerHandlerType::Message)
-        );
+            MessengerHandlerType::Message
+        ));
+
+        $this->bot->onLocation(fn () => $executeHandler(
+            $this->findHandler([$this, 'getMessageHandler']),
+            MessengerHandlerType::Message
+        ));
     }
 
     public function setHandlers(MessengerHandlerContainerInterface $handlers): void
