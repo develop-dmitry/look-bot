@@ -12,6 +12,7 @@ use Look\Domain\TimeOfDay\TimeOfDay;
 use Look\Domain\Value\Exception\InvalidValueException;
 use Look\Domain\Weather\Exception\GetWeatherException;
 use Look\Domain\Weather\Interface\WeatherBuilderInterface;
+use Look\Domain\Weather\Interface\WeatherCacheInterface;
 use Look\Domain\Weather\Interface\WeatherGatewayInterface;
 use Look\Domain\Weather\Interface\WeatherInterface;
 use Psr\Log\LoggerInterface;
@@ -24,6 +25,7 @@ class WeatherGateway implements WeatherGatewayInterface
         protected string                      $token,
         protected WeatherBuilderInterface     $weatherBuilder,
         protected GeoLocationBuilderInterface $geoLocationBuilder,
+        protected WeatherCacheInterface       $weatherCache,
         protected LoggerInterface             $logger
     ) {
     }
@@ -31,7 +33,9 @@ class WeatherGateway implements WeatherGatewayInterface
     public function getWeather(GeoLocationInterface $geoLocation, TimeOfDay $timeOfDay): WeatherInterface
     {
         $params = ['lon' => $geoLocation->getLon()->getValue(), 'lat' => $geoLocation->getLat()->getValue()];
-        $response = $this->executeRequest($params);
+        $response = $this->weatherCache->getWeather($geoLocation, function () use ($params) {
+            return $this->executeRequest($params);
+        });
 
         try {
             return $this->makeEntity($response, $timeOfDay);
@@ -55,7 +59,6 @@ class WeatherGateway implements WeatherGatewayInterface
         $hours = $timeOfDay->getHourDiapason();
 
         foreach ($params['forecasts'] as $forecast) {
-            var_dump($forecast);
             if ($forecast['date'] !== $date) {
                 continue;
             }

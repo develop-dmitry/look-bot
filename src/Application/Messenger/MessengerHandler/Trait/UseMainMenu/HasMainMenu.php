@@ -48,13 +48,10 @@ trait HasMainMenu
     protected function getMenuButtons(): array
     {
         $buttons[] = $this->buttonFactory->makeReplyButton()
-            ->setText($this->dictionary->getTranslate('telegram.menu.points.about'));
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.get_weather'));
 
         $buttons[] = $this->buttonFactory->makeReplyButton()
             ->setText($this->dictionary->getTranslate('telegram.menu.points.support'));
-
-        $buttons[] = $this->buttonFactory->makeReplyButton()
-            ->setText($this->dictionary->getTranslate('telegram.menu.points.get_weather'));
 
         return $buttons;
     }

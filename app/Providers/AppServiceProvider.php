@@ -41,8 +41,10 @@ use Look\Domain\MessengerUser\MessengerUserBuilder;
 use Look\Domain\Value\Factory\ValueFactory;
 use Look\Domain\Value\Factory\ValueFactoryInterface;
 use Look\Domain\Weather\Interface\WeatherBuilderInterface;
+use Look\Domain\Weather\Interface\WeatherCacheInterface;
 use Look\Domain\Weather\Interface\WeatherGatewayInterface;
 use Look\Domain\Weather\WeatherBuilder;
+use Look\Infrastructure\Cache\Weather\WeatherCache;
 use Look\Infrastructure\Gateway\Weather\WeatherGateway;
 use Look\Infrastructure\Messenger\TelegramMessenger\TelegramMessenger;
 use Look\Infrastructure\Repository\ClientRepository\EloquentClientRepository;
@@ -70,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(WeatherBuilderInterface::class, WeatherBuilder::class);
         $this->app->bind(GetWeatherInterface::class, GetWeatherUseCase::class);
         $this->app->bind(WeatherGatewayInterface::class, WeatherGateway::class);
+        $this->app->bind(WeatherCacheInterface::class, WeatherCache::class);
         $this->app->when(WeatherGateway::class)
             ->needs('$token')
             ->give(config('services.weather.token'));
