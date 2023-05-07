@@ -13,6 +13,7 @@ use Look\Domain\Client\Interface\ClientRepositoryInterface;
 use Look\Domain\Exception\RepositoryException;
 use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Look\Domain\Value\Exception\InvalidValueException;
+use Look\Domain\Value\Factory\ValueFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 class EloquentClientRepository implements ClientRepositoryInterface
@@ -20,6 +21,7 @@ class EloquentClientRepository implements ClientRepositoryInterface
     public function __construct(
         protected ClientBuilderInterface $clientBuilder,
         protected GeoLocationBuilderInterface $geoLocationBuilder,
+        protected ValueFactoryInterface $valueFactory,
         protected LoggerInterface $logger
     ) {
     }
@@ -43,10 +45,20 @@ class EloquentClientRepository implements ClientRepositoryInterface
 
         if (!$clientModel->save()) {
             $this->logger->emergency('Не удалось создать клиента', ['client' => $client]);
+            
             throw new RepositoryException('Failed to create client');
         }
 
-        $client->setId($clientModel->id);
+        try {
+            $client->setId($this->valueFactory->makeId($clientModel->id));
+        } catch (InvalidValueException $exception) {
+            $this->logger->emergency('Не удалось создать объект ID', [
+                'id' => $clientModel->id,
+                'exception' => $exception
+            ]);
+
+            throw new RepositoryException('Fail to make ID');
+        }
     }
 
     public function saveClient(ClientInterface $client): void

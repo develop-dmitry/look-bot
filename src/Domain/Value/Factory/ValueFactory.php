@@ -13,6 +13,8 @@ use Look\Domain\Value\Id\Id;
 use Look\Domain\Value\Id\Interface\IdInterface;
 use Look\Domain\Value\Level\Interface\LevelInterface;
 use Look\Domain\Value\Level\Level;
+use Look\Domain\Value\Message\Interface\MessageInterface;
+use Look\Domain\Value\Message\Message;
 use Look\Domain\Value\Name\Interface\NameInterface;
 use Look\Domain\Value\Name\Name;
 use Look\Domain\Value\Photo\Interface\PhotoInterface;
@@ -55,5 +57,10 @@ class ValueFactory implements ValueFactoryInterface
     public function makeAddress(string $address): AddressInterface
     {
         return new Address($address);
+    }
+
+    public function makeMessage(string $message): MessageInterface
+    {
+        return new Message($message);
     }
 }

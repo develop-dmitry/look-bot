@@ -6,24 +6,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Client extends Model
+class SupportMessage extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'telegram_id',
-        'lat',
-        'lon'
+        'client_id',
+        'context',
+        'message',
+        'resolved',
+        'comment'
     ];
 
     protected $casts = [
-        'lat' => 'float',
-        'lon' => 'float'
+        'resolved' => 'boolean'
     ];
 
-    public function user(): BelongsTo
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Client::class);
     }
 }

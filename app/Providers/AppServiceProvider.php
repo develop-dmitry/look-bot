@@ -26,9 +26,10 @@ use Look\Application\Messenger\MessengerUser\FindMessengerUser\FindMessengerUser
 use Look\Application\Messenger\MessengerUser\FindMessengerUser\Interface\FindMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\Interface\SaveMessengerUserInterface;
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\SaveMessengerUserUseCase;
+use Look\Application\SupportMessage\CreateSupportMessage\CreateSupportMessageUseCase;
+use Look\Application\SupportMessage\CreateSupportMessage\Interface\CreateSupportMessageInterface;
 use Look\Application\Weather\GetWeather\GetWeatherUseCase;
 use Look\Application\Weather\GetWeather\Interface\GetWeatherInterface;
-use Look\Application\Weather\GetWeatherMenu\Interface\GetWeatherMenuInterface;
 use Look\Domain\Client\Client;
 use Look\Domain\Client\ClientBuilder;
 use Look\Domain\Client\Interface\ClientBuilderInterface;
@@ -38,6 +39,9 @@ use Look\Domain\GeoLocation\GeoLocationBuilder;
 use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Look\Domain\MessengerUser\Interface\MessengerUserBuilderInterface;
 use Look\Domain\MessengerUser\MessengerUserBuilder;
+use Look\Domain\SupportMessage\Interface\SupportMessageBuilderInterface;
+use Look\Domain\SupportMessage\Interface\SupportMessageRepositoryInterface;
+use Look\Domain\SupportMessage\SupportMessageBuilder;
 use Look\Domain\Value\Factory\ValueFactory;
 use Look\Domain\Value\Factory\ValueFactoryInterface;
 use Look\Domain\Weather\Interface\WeatherBuilderInterface;
@@ -49,6 +53,7 @@ use Look\Infrastructure\Gateway\Weather\WeatherGateway;
 use Look\Infrastructure\Messenger\TelegramMessenger\TelegramMessenger;
 use Look\Infrastructure\Repository\ClientRepository\EloquentClientRepository;
 use Look\Infrastructure\Repository\MessengerUserRepository\TelegramMessengerUserRepository;
+use Look\Infrastructure\Repository\SupportMessage\EloquentSupportMessageRepository;
 use Psr\Log\LoggerInterface;
 use SergiX44\Nutgram\Nutgram;
 
@@ -76,6 +81,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->when(WeatherGateway::class)
             ->needs('$token')
             ->give(config('services.weather.token'));
+
+        $this->app->bind(SupportMessageBuilderInterface::class, SupportMessageBuilder::class);
+        $this->app->bind(SupportMessageRepositoryInterface::class, EloquentSupportMessageRepository::class);
+        $this->app->bind(CreateSupportMessageInterface::class, CreateSupportMessageUseCase::class);
 
         $this->app->bind(MessengerButtonFactoryInterface::class, MessengerButtonFactory::class);
         $this->app->bind(MessengerKeyboardFactoryInterface::class, MessengerKeyboardFactory::class);

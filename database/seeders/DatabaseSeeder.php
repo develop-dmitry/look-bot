@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Client;
 use App\Models\Clothes;
 use App\Models\Event;
 use App\Models\Hair;
@@ -10,6 +11,7 @@ use App\Models\Look;
 use App\Models\Makeup;
 use App\Models\Season;
 use App\Models\Style;
+use App\Models\SupportMessage;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,6 +21,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $clients = Client::factory(2);
         $seasons = Season::factory(4);
         $events = Event::factory(10);
         $styles = Style::factory(10);
@@ -40,11 +43,8 @@ class DatabaseSeeder extends Seeder
             ->has($makeups)
             ->has($clothes)
             ->create();
-        // \App\Models\User::factory(10)->create();
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        SupportMessage::factory(10)
+            ->has($clients);
     }
 }
