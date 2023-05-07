@@ -16,14 +16,14 @@ interface MessengerContextInterface
     public function getRequest(): MessengerRequestInterface;
 
     /**
-     * @return ClientInterface|null
+     * @return ClientInterface
      */
-    public function getClient(): ?ClientInterface;
+    public function getClient(): ClientInterface;
 
     /**
-     * @return MessengerUserInterface|null
+     * @return MessengerUserInterface
      */
-    public function getMessengerUser(): ?MessengerUserInterface;
+    public function getMessengerUser(): MessengerUserInterface;
 
     /**
      * @return bool

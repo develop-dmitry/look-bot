@@ -10,10 +10,13 @@ use Look\Application\Client\SaveClient\Interface\SaveClientInterface;
 use Look\Application\Client\SaveClient\SaveClientUseCase;
 use Look\Application\Dictionary\Dictionary;
 use Look\Application\Dictionary\DictionaryInterface;
+use Look\Application\FormatDate\FormatDate;
+use Look\Application\FormatDate\FormatDateInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerButton\MessengerButtonFactory;
 use Look\Application\Messenger\MessengerContainer\Interface\MessengerContainerFactoryInterface;
 use Look\Application\Messenger\MessengerContainer\MessengerContainerFactory;
+use Look\Application\Messenger\MessengerHandler\GetWeatherMessengerHandler;
 use Look\Application\Messenger\MessengerInterface;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFactoryInterface;
 use Look\Application\Messenger\MessengerKeyboard\MessengerKeyboardFactory;
@@ -25,6 +28,7 @@ use Look\Application\Messenger\MessengerUser\SaveMessengerUser\Interface\SaveMes
 use Look\Application\Messenger\MessengerUser\SaveMessengerUser\SaveMessengerUserUseCase;
 use Look\Application\Weather\GetWeather\GetWeatherUseCase;
 use Look\Application\Weather\GetWeather\Interface\GetWeatherInterface;
+use Look\Application\Weather\GetWeatherMenu\Interface\GetWeatherMenuInterface;
 use Look\Domain\Client\Client;
 use Look\Domain\Client\ClientBuilder;
 use Look\Domain\Client\Interface\ClientBuilderInterface;
@@ -68,7 +72,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(WeatherGatewayInterface::class, WeatherGateway::class);
         $this->app->when(WeatherGateway::class)
             ->needs('$token')
-            ->give(env('YANDEX_WEATHER_TOKEN'));
+            ->give(config('services.weather.token'));
 
         $this->app->bind(MessengerButtonFactoryInterface::class, MessengerButtonFactory::class);
         $this->app->bind(MessengerKeyboardFactoryInterface::class, MessengerKeyboardFactory::class);
@@ -105,6 +109,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->when(Dictionary::class)
             ->needs('$locale')
             ->give(config('app.locale'));
+
+        $this->app->bind(FormatDateInterface::class, FormatDate::class);
     }
 
     /**

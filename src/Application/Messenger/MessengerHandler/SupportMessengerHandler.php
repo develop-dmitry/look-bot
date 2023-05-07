@@ -38,6 +38,4 @@ class SupportMessengerHandler implements MessengerHandlerInterface
     {
         return [MessengerHandlerName::Support];
     }
-
-
 }

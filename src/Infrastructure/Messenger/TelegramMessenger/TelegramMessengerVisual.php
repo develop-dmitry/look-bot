@@ -38,7 +38,7 @@ class TelegramMessengerVisual implements MessengerVisualInterface
         $this->editMessage = $editMessage;
     }
 
-    public function sendKeyboard(MessengerKeyboardInterface $keyboard): void
+    public function sendKeyboard(?MessengerKeyboardInterface $keyboard): void
     {
         $this->keyboard = $keyboard;
     }
@@ -56,17 +56,17 @@ class TelegramMessengerVisual implements MessengerVisualInterface
 
     protected function getMessageOptions(): array
     {
-        $options = [];
-
-        if ($this->keyboard) {
-            $options['reply_markup'] = $this->adaptKeyboard();
-        }
-
-        return $options;
+        return [
+            'reply_markup' => $this->adaptKeyboard()
+        ];
     }
 
     protected function adaptKeyboard(): ReplyKeyboardMarkup|InlineKeyboardMarkup|null
     {
+        if (!$this->keyboard) {
+            return null;
+        }
+
         return match ($this->keyboard->getType()) {
             MessengerKeyboardType::Inline => $this->makeInlineKeyboardMarkup($this->keyboard),
             MessengerKeyboardType::Reply => $this->makeReplyKeyboardMarkup($this->keyboard)

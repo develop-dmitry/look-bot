@@ -8,29 +8,40 @@ use DateTime;
 use Look\Application\Client\SaveClient\Interface\SaveClientInterface;
 use Look\Application\Client\SaveClient\SaveClientRequest;
 use Look\Application\Dictionary\DictionaryInterface;
+use Look\Application\FormatDate\FormatDateInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
-use Look\Application\Messenger\MessengerHandler\Trait\Menu\HasMenu;
-use Look\Application\Messenger\MessengerHandler\Trait\Menu\UseMenuInterface;
+use Look\Application\Messenger\MessengerHandler\Trait\UseMainMenu\HasMainMenu;
+use Look\Application\Messenger\MessengerHandler\Trait\UseMainMenu\UseMainMenuInterface;
+use Look\Application\Messenger\MessengerKeyboard\Exception\FailedAddRowKeyboardException;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFactoryInterface;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
+use Look\Application\Messenger\MessengerOption\Exception\FailedAddOptionException;
+use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionNameException;
+use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionValueException;
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionFactoryInterface;
-use Look\Application\Messenger\MessengerOption\MessengerButtonOption\MessengerButtonOptionName;
 use Look\Application\Messenger\MessengerOption\MessengerKeyboardOption\MessengerKeyboardOptionName;
 use Look\Application\Messenger\MessengerVisual\MessengerVisualInterface;
 use Look\Application\Weather\GetWeather\GetWeatherRequest;
 use Look\Application\Weather\GetWeather\Interface\GetWeatherInterface;
+use Look\Application\Weather\GetWeatherMenu\Interface\GetWeatherMenuInterface;
 use Look\Domain\Client\Interface\ClientInterface;
 use Look\Domain\GeoLocation\Interface\GeoLocationInterface;
 use Look\Domain\TimeOfDay\TimeOfDay;
 use Psr\Log\LoggerInterface;
 
-class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuInterface
+class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMainMenuInterface
 {
-    use HasMenu;
+    use HasMainMenu;
+
+    protected string $dateFormat = 'Y-m-d H:i:s';
+
+    protected MessengerContextInterface $context;
+
+    protected MessengerVisualInterface $visual;
 
     public function __construct(
         protected GetWeatherInterface               $getWeather,
@@ -39,7 +50,9 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
         protected MessengerButtonFactoryInterface   $buttonFactory,
         protected SaveClientInterface               $saveClient,
         protected LoggerInterface                   $logger,
-        protected DictionaryInterface               $dictionary
+        protected DictionaryInterface               $dictionary,
+        protected FormatDateInterface               $formatDate,
+        protected GetWeatherMenuInterface           $weatherMenu
     ) {
     }
 
@@ -49,8 +62,10 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
             $visual->sendMessage($this->dictionary->getTranslate('telegram.unknown_client'));
         }
 
+        $this->context = $context;
+        $this->visual = $visual;
+
         $client = $context->getClient();
-        $messengerUser = $context->getMessengerUser();
         $geoLocation = $context->getRequest()->getGeoLocation();
 
         if ($geoLocation) {
@@ -60,27 +75,9 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
         }
 
         if ($geoLocation) {
-            $currentDate = new DateTime();
-            $callbackQuery = $context->getRequest()->getCallbackQuery();
-            $editMessage = false;
-
-            if (isset($callbackQuery['time_of_day'])) {
-                $timeOfDay = TimeOfDay::fromTimeOfDay($callbackQuery['time_of_day']);
-                $editMessage = true;
-            } else if (isset($callbackQuery['tomorrow'])) {
-                $timeOfDay = TimeOfDay::fromDateTime(new DateTime('tomorrow noon'));
-                $editMessage = true;
-            } else {
-                $timeOfDay = TimeOfDay::fromDateTime($currentDate);
-            }
-
-            $visual->sendMessage($this->getWeatherMessage($geoLocation, $timeOfDay), $editMessage);
-            $visual->sendKeyboard($this->getWeatherKeyboard($currentDate, $timeOfDay));
-        } else if ($messengerUser) {
-            $messengerUser->setMessageHandler(MessengerHandlerName::GetWeatherText);
-
-            $visual->sendMessage($this->dictionary->getTranslate('telegram.get_weather.need_location'));
-            $visual->sendKeyboard($this->getGeoLocationKeyboard());
+            $this->printWeather($geoLocation);
+        } else {
+            $this->needGeoLocation();
         }
     }
 
@@ -94,12 +91,34 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
         return [MessengerHandlerName::GetWeatherText, MessengerHandlerName::GetWeatherCallbackQuery];
     }
 
-    protected function saveGeoLocation(GeoLocationInterface $geoLocation, ?ClientInterface $client): void
+    protected function printWeather(GeoLocationInterface $geoLocation): void
     {
-        if (!$client) {
-            return;
+        $callbackQuery = $this->context->getRequest()->getCallbackQuery();
+        $date = new DateTime();
+        $editMessage = false;
+
+        if (isset($callbackQuery['date'])) {
+            $date = DateTime::createFromFormat($this->dateFormat, $callbackQuery['date']);
+            $editMessage = true;
         }
 
+        $timeOfDay = TimeOfDay::fromDateTime($date);
+
+        $this->visual->sendMessage($this->getWeatherMessage($geoLocation, $timeOfDay), $editMessage);
+        $this->visual->sendKeyboard($this->getWeatherKeyboard($timeOfDay));
+    }
+
+    protected function needGeoLocation(): void
+    {
+        $messengerUser = $this->context->getMessengerUser();
+        $messengerUser->setMessageHandler(MessengerHandlerName::GetWeatherText);
+
+        $this->visual->sendMessage($this->dictionary->getTranslate('telegram.get_weather.need_location'));
+        $this->visual->sendKeyboard($this->getGeoLocationKeyboard());
+    }
+
+    protected function saveGeoLocation(GeoLocationInterface $geoLocation, ClientInterface $client): void
+    {
         $client->setGeoLocation($geoLocation);
         $request = new SaveClientRequest($client);
 
@@ -116,16 +135,22 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
         if ($response->isSuccess()) {
             $weather = $response->getWeather();
 
-            $timeOfDayText = mb_strtolower(match ($timeOfDay->getTimeOfDay()) {
-                $timeOfDay::Afternoon => strtolower($this->dictionary->getTranslate('common.afternoon')),
-                $timeOfDay::Evening => strtolower($this->dictionary->getTranslate('common.evening')),
-                $timeOfDay::Night => strtolower($this->dictionary->getTranslate('common.night')),
-                default => ''
-            });
+            if (
+                $timeOfDay->isToday() ||
+                ($timeOfDay->isTomorrow() && $timeOfDay->getTimeOfDay() === TimeOfDay::Night)
+            ) {
+                $timeOfDayText = mb_strtolower(match ($timeOfDay->getTimeOfDay()) {
+                    $timeOfDay::Afternoon => strtolower($this->dictionary->getTranslate('common.afternoon')),
+                    $timeOfDay::Evening => strtolower($this->dictionary->getTranslate('common.evening')),
+                    $timeOfDay::Night => strtolower($this->dictionary->getTranslate('common.night')),
+                    default => ''
+                });
+            } else {
+                $timeOfDayText = 'завтра';
+            }
 
             return $this->dictionary->getTranslate('telegram.get_weather.weather_message', [
                 'address' => $weather?->getGeoLocation()->getAddress()?->getValue(),
-                'date' => $timeOfDay->getDate()->format('d F'),
                 'time_of_day' => $timeOfDayText,
                 'min_temp' => $weather?->getMinTemperature()->getFormatValue(),
                 'max_temp' => $weather?->getMaxTemperature()->getFormatValue()
@@ -135,89 +160,80 @@ class GetWeatherMessengerHandler implements MessengerHandlerInterface, UseMenuIn
         return ($response->getError()) ?: $this->dictionary->getTranslate('telegram.get_weather.default_error');
     }
 
-    protected function getWeatherKeyboard(DateTime $date, TimeOfDay $currentTimeOfDay): MessengerKeyboardInterface
+    protected function getWeatherKeyboard(TimeOfDay $currentTimeOfDay): ?MessengerKeyboardInterface
     {
-        $isTomorrow = $date->format('Y-m-d') !== $currentTimeOfDay->getDate()->format('Y-m-d');
-        $keyboard = $this->keyboardFactory->makeInlineKeyboard();
+        try {
+            $keyboard = $this->keyboardFactory->makeInlineKeyboard();
 
-        $acceptCallbackOption = $this->optionFactory->makeCallbackDataButtonOption()
-            ->setName(MessengerButtonOptionName::CallbackData->value)
-            ->setValue(['action' => 'accept']);
+            $keyboard->addRow(
+                $this->buttonFactory->makeCallbackDataInlineButton(['action' => 'accept'])
+                    ->setText($this->dictionary->getTranslate('telegram.get_weather.accept'))
+            );
 
-        $acceptButton = $this->buttonFactory->makeInlineButton()
-            ->setText($this->dictionary->getTranslate('telegram.get_weather.accept'))
-            ->addOption($acceptCallbackOption);
+            foreach ($this->weatherMenu->getWeatherMenu()->getMenu() as $point) {
+                if ($point->isToday() || ($point->isTomorrow() && $point->getTimeOfDay() === TimeOfDay::Night)) {
+                    $dictionaryKey = match ($point->getTimeOfDay()) {
+                        TimeOfDay::Afternoon => 'telegram.get_weather.afternoon',
+                        TimeOfDay::Evening => 'telegram.get_weather.evening',
+                        TimeOfDay::Night => 'telegram.get_weather.night',
+                        default => 'telegram.get_weather.date'
+                    };
+                } else if ($point->isTomorrow()) {
+                    $dictionaryKey = 'telegram.get_weather.tomorrow';
+                } else {
+                    $dictionaryKey = 'telegram.get_weather.date';
+                }
 
-        $keyboard->addRow($acceptButton);
-
-        foreach (TimeOfDay::getValuesList() as $nextTime) {
-            $isCurrentTime = $nextTime === $currentTimeOfDay->getTimeOfDay() && !$isTomorrow;
-
-            $timeButtonText = match ($nextTime) {
-                TimeOfDay::Afternoon => $this->dictionary->getTranslate('telegram.get_weather.afternoon', [
-                    'current' => ($isCurrentTime) ? '👉 ' : ''
-                ]),
-                TimeOfDay::Evening => $this->dictionary->getTranslate('telegram.get_weather.evening', [
-                    'current' => ($isCurrentTime) ? '👉 ' : ''
-                ]),
-                TimeOfDay::Night => $this->dictionary->getTranslate('telegram.get_weather.night', [
-                    'current' => ($isCurrentTime) ? '👉 ' : ''
-                ]),
-                default => ''
-            };
-
-            if (!$timeButtonText) {
-                continue;
-            }
-
-            $timeCallbackOption = $this->optionFactory->makeCallbackDataButtonOption()
-                ->setName(MessengerButtonOptionName::CallbackData->value)
-                ->setValue([
+                $callbackData = [
                     'action' => MessengerHandlerName::GetWeatherCallbackQuery->value,
-                    'time_of_day' => $nextTime
+                    'date' => $point->getDate()->format($this->dateFormat)
+                ];
+                $text = $this->dictionary->getTranslate($dictionaryKey, [
+                    'current' => ($currentTimeOfDay->equal($point)) ? '👉' : '',
+                    'date' => $this->formatDate->short($point->getDate())
                 ]);
 
-            $timeButton = $this->buttonFactory->makeInlineButton()
-                ->setText($timeButtonText)
-                ->addOption($timeCallbackOption);
+                $keyboard->addRow(
+                    $this->buttonFactory->makeCallbackDataInlineButton($callbackData)
+                        ->setText($text)
+                );
+            }
 
-            $keyboard->addRow($timeButton);
+            return $keyboard;
+        } catch (
+            FailedAddRowKeyboardException|
+            FailedAddOptionException|
+            FailedSetOptionNameException|
+            FailedSetOptionValueException $exception
+        ) {
+            $this->logger->emergency('Не удалось создать клавиатуру для погоды', ['exception' => $exception]);
+
+            return null;
         }
-
-        $tomorrowCallbackOption = $this->optionFactory->makeCallbackDataButtonOption()
-            ->setName(MessengerButtonOptionName::CallbackData->value)
-            ->setValue(['action' => MessengerHandlerName::GetWeatherCallbackQuery->value, 'tomorrow' => true]);
-
-
-        $tomorrowButton = $this->buttonFactory->makeInlineButton()
-            ->setText($this->dictionary->getTranslate('telegram.get_weather.tomorrow', [
-                'current' => ($isTomorrow && $currentTimeOfDay->getTimeOfDay() !== TimeOfDay::Night) ? '👉 ' : ''
-            ]))
-            ->addOption($tomorrowCallbackOption);
-
-        $keyboard->addRow($tomorrowButton);
-
-        return $keyboard;
     }
 
-    protected function getGeoLocationKeyboard(): MessengerKeyboardInterface
+    protected function getGeoLocationKeyboard(): ?MessengerKeyboardInterface
     {
-        $keyboardOptions[] = $this->optionFactory->makeKeyboardOption()
-            ->setName(MessengerKeyboardOptionName::ResizeKeyboard->value)
-            ->setValue(true);
+        try {
+            return $this->keyboardFactory->makeReplyKeyboard()
+                ->addOption(
+                    $this->optionFactory->makeKeyboardOption()
+                        ->setName(MessengerKeyboardOptionName::ResizeKeyboard->value)
+                        ->setValue(true)
+                )
+                ->addRow(
+                    $this->buttonFactory->makeLocationReplyButton()
+                        ->setText($this->dictionary->getTranslate('telegram.get_weather.send_location'))
+                );
+        } catch (
+            FailedAddRowKeyboardException|
+            FailedAddOptionException|
+            FailedSetOptionNameException|
+            FailedSetOptionValueException $exception
+        ) {
+            $this->logger->emergency('Не удалось создать клавиатуру для геолокации', ['exception' => $exception]);
 
-        $requestLocationOption = $this->optionFactory->makeButtonOption()
-            ->setName(MessengerButtonOptionName::RequestLocation->value)
-            ->setValue(true);
-
-        $requestLocationButton = $this->buttonFactory->makeReplyButton()
-            ->setText($this->dictionary->getTranslate('telegram.get_weather.send_location'))
-            ->addOption($requestLocationOption);
-
-        $keyboard = $this->keyboardFactory->makeReplyKeyboard();
-        $keyboard->addOption(...$keyboardOptions);
-        $keyboard->addRow($requestLocationButton);
-
-        return $keyboard;
+            return null;
+        }
     }
 }

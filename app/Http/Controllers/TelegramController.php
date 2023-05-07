@@ -14,13 +14,11 @@ use Look\Application\Messenger\MessengerHandler\Exception\MessengerHandlerAlread
 use Look\Application\Messenger\MessengerHandler\GetWeatherMessengerHandler;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerContainerInterface;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
-use Look\Application\Messenger\MessengerHandler\MenuMessengerHandler;
+use Look\Application\Messenger\MessengerHandler\MainMenuMessengerHandler;
 use Look\Application\Messenger\MessengerHandler\SupportMessengerHandler;
 use Look\Application\Messenger\MessengerHandler\WelcomeMessengerHandler;
 use Look\Application\Messenger\MessengerInterface;
-use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFactoryInterface;
-use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionFactoryInterface;
-use Look\Application\Weather\GetWeather\Interface\GetWeatherInterface;
+use Look\Application\Weather\GetWeatherMenu\TelegramGetWeatherMenuUseCase;
 use Psr\Log\LoggerInterface;
 
 class TelegramController extends Controller
@@ -48,13 +46,15 @@ class TelegramController extends Controller
     {
         $this->addHandler(app()->make(WelcomeMessengerHandler::class));
 
-        $this->addHandler(app()->make(MenuMessengerHandler::class));
+        $this->addHandler(app()->make(MainMenuMessengerHandler::class));
 
         $this->addHandler(app()->make(SupportMessengerHandler::class));
 
         $this->addHandler(app()->make(AddSupportMessengerHandler::class));
 
-        $this->addHandler(app()->make(GetWeatherMessengerHandler::class));
+        $this->addHandler(app()->makeWith(GetWeatherMessengerHandler::class, [
+            'weatherMenu' => app()->make(TelegramGetWeatherMenuUseCase::class)
+        ]));
     }
 
     protected function addHandler(MessengerHandlerInterface $handler): void

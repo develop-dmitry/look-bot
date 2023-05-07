@@ -16,8 +16,8 @@ interface MessengerVisualInterface
     public function sendMessage(string $message, bool $editMessage = false): void;
 
     /**
-     * @param MessengerKeyboardInterface $keyboard
+     * @param MessengerKeyboardInterface|null $keyboard
      * @return void
      */
-    public function sendKeyboard(MessengerKeyboardInterface $keyboard): void;
+    public function sendKeyboard(?MessengerKeyboardInterface $keyboard): void;
 }

@@ -15,10 +15,12 @@ class TimeOfDay
 
     public const Night = 'night';
 
-    private function __construct(
-        protected string $timeOfDay,
-        protected DateTime $date
-    ) {
+    protected string $timeOfDay;
+
+    protected DateTime $date;
+
+    private function __construct()
+    {
     }
 
     /**
@@ -49,6 +51,42 @@ class TimeOfDay
         return $this->date;
     }
 
+    public function equal(TimeOfDay $timeOfDay): bool
+    {
+        return $this->timeOfDay === $timeOfDay->getTimeOfDay()
+            && $this->date->format('Y-m-d') === $timeOfDay->getDate()->format('Y-m-d');
+    }
+
+    /**
+     * @return TimeOfDay[]
+     */
+    public function getNexts(): array
+    {
+        try {
+            return match ($this->timeOfDay) {
+                self::Afternoon => [self::fromTimeOfDay(self::Evening), self::fromTimeOfDay(self::Night)],
+                self::Evening => [self::fromTimeOfDay(self::Night)],
+                default => []
+            };
+        } catch (UnexpectedValueException) {
+            return [];
+        }
+    }
+
+    public function isTomorrow(): bool
+    {
+        $tomorrow = new DateTime('tomorrow');
+
+        return $tomorrow->format('Y-m-d') === $this->date->format('Y-m-d');
+    }
+
+    public function isToday(): bool
+    {
+        $today = new DateTime();
+
+        return $today->format('Y-m-d') === $this->date->format('Y-m-d');
+    }
+
     /**
      * @param DateTime $date
      * @return self
@@ -58,14 +96,14 @@ class TimeOfDay
         $hour = (int) $date->format('H');
 
         if ($hour < 7) {
-            return new self(self::Night, $date);
+            return self::make(self::Night, $date);
         }
 
         if ($hour < 16) {
-            return new self(self::Afternoon, $date);
+            return self::make(self::Afternoon, $date);
         }
 
-        return new self(self::Evening, $date);
+        return self::make(self::Evening, $date);
     }
 
     /**
@@ -73,24 +111,27 @@ class TimeOfDay
      */
     public static function fromTimeOfDay(string $timeOfDay): self
     {
-        $date = match ($timeOfDay) {
-            self::Afternoon, self::Evening => new DateTime(),
-            self::Night => new DateTime('+1 day'),
+        return match ($timeOfDay) {
+            self::Afternoon => self::make(self::Afternoon, new DateTime()),
+            self::Evening => self::make(self::Evening, new DateTime()),
+            self::Night => self::make(self::Night, new DateTime('tomorrow')),
             default => throw new UnexpectedValueException("Unexpected value $timeOfDay for time of day")
         };
-
-        return new self($timeOfDay, $date);
     }
 
-    /**
-     * @return array
-     */
-    public static function getValuesList(): array
+    protected static function make(string $value, DateTime $date): self
     {
-        return [
-            self::Afternoon,
-            self::Evening,
-            self::Night
-        ];
+        $timeOfDay = new self();
+
+        $timeOfDay->timeOfDay = $value;
+        $hoursDiapasons = $timeOfDay->getHourDiapason();
+
+        if (!empty($hoursDiapasons)) {
+            $date->setTime($hoursDiapasons[0], 0);
+        }
+
+        $timeOfDay->date = $date;
+
+        return $timeOfDay;
     }
 }

@@ -13,10 +13,10 @@ interface MessengerKeyboardInterface extends UseMessengerOptionInterface
 {
     /**
      * @param MessengerButtonInterface ...$buttons
-     * @return void
+     * @return MessengerKeyboardInterface
      * @throws FailedAddRowKeyboardException
      */
-    public function addRow(MessengerButtonInterface ...$buttons): void;
+    public function addRow(MessengerButtonInterface ...$buttons): self;
 
     /**
      * @return MessengerButtonInterface[][]

@@ -10,17 +10,16 @@ use Look\Application\Messenger\MessengerContext\MessengerContextInterface;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Interface\MessengerHandlerInterface;
-use Look\Application\Messenger\MessengerHandler\Trait\Menu\FailedBuildMenuException;
-use Look\Application\Messenger\MessengerHandler\Trait\Menu\HasMenu;
-use Look\Application\Messenger\MessengerHandler\Trait\Menu\UseMenuInterface;
+use Look\Application\Messenger\MessengerHandler\Trait\UseMainMenu\HasMainMenu;
+use Look\Application\Messenger\MessengerHandler\Trait\UseMainMenu\UseMainMenuInterface;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardFactoryInterface;
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionFactoryInterface;
 use Look\Application\Messenger\MessengerVisual\MessengerVisualInterface;
 use Psr\Log\LoggerInterface;
 
-class MenuMessengerHandler implements MessengerHandlerInterface, UseMenuInterface
+class MainMenuMessengerHandler implements MessengerHandlerInterface, UseMainMenuInterface
 {
-    use HasMenu;
+    use HasMainMenu;
 
     public function __construct(
         protected LoggerInterface $logger,
@@ -33,12 +32,8 @@ class MenuMessengerHandler implements MessengerHandlerInterface, UseMenuInterfac
 
     public function handle(MessengerContextInterface $context, MessengerVisualInterface $visual): void
     {
-        try {
-            $visual->sendMessage($this->dictionary->getTranslate('telegram.menu.message'));
-            $visual->sendKeyboard($this->getMenuKeyboard());
-        } catch (FailedBuildMenuException $exception) {
-            $this->logger->emergency('Не удалось сформировать меню', ['exception' => $exception]);
-        }
+        $visual->sendMessage($this->dictionary->getTranslate('telegram.menu.message'));
+        $visual->sendKeyboard($this->getMainMenuKeyboard());
     }
 
     public function getTypes(): array
@@ -50,6 +45,4 @@ class MenuMessengerHandler implements MessengerHandlerInterface, UseMenuInterfac
     {
         return [MessengerHandlerName::Menu];
     }
-
-
 }

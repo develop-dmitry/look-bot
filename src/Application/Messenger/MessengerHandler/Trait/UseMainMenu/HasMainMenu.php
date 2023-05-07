@@ -2,26 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Look\Application\Messenger\MessengerHandler\Trait\Menu;
+namespace Look\Application\Messenger\MessengerHandler\Trait\UseMainMenu;
 
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonInterface;
-use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
 use Look\Application\Messenger\MessengerKeyboard\Exception\FailedAddRowKeyboardException;
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
 use Look\Application\Messenger\MessengerOption\Exception\FailedAddOptionException;
 use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionNameException;
 use Look\Application\Messenger\MessengerOption\Exception\FailedSetOptionValueException;
 use Look\Application\Messenger\MessengerOption\Interface\MessengerOptionInterface;
-use Look\Application\Messenger\MessengerOption\MessengerButtonOption\MessengerButtonOptionName;
 use Look\Application\Messenger\MessengerOption\MessengerKeyboardOption\MessengerKeyboardOptionName;
 
-trait HasMenu
+trait HasMainMenu
 {
-    /**
-     * @return MessengerKeyboardInterface
-     * @throws FailedBuildMenuException
-     */
-    public function getMenuKeyboard(): MessengerKeyboardInterface
+    public function getMainMenuKeyboard(): ?MessengerKeyboardInterface
     {
         try {
             $keyboard = $this->keyboardFactory->makeReplyKeyboard();
@@ -42,7 +36,9 @@ trait HasMenu
             FailedAddOptionException|
             FailedSetOptionValueException $exception
         ) {
-            throw new FailedBuildMenuException($exception->getMessage());
+            $this->logger->emergency('Не удалось собрать главное меню', ['exception' => $exception]);
+
+            return null;
         }
     }
 

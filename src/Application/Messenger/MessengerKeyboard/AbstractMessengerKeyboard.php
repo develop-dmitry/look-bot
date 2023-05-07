@@ -23,7 +23,7 @@ abstract class AbstractMessengerKeyboard implements MessengerKeyboardInterface
         $this->setOptionContainer($optionContainer);
     }
 
-    public function addRow(MessengerButtonInterface ...$buttons): void
+    public function addRow(MessengerButtonInterface ...$buttons): self
     {
         foreach ($buttons as $button) {
             if (!$this->buttonCanBeAdded($button)) {
@@ -37,6 +37,8 @@ abstract class AbstractMessengerKeyboard implements MessengerKeyboardInterface
         }
 
         $this->rows[] = $buttons;
+
+        return $this;
     }
 
     public function getRows(): array

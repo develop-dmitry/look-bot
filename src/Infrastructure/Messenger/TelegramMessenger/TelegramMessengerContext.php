@@ -61,17 +61,17 @@ class TelegramMessengerContext implements MessengerContextInterface
     }
 
     /**
-     * @return ClientInterface|null
+     * @return ClientInterface
      */
-    public function getClient(): ?ClientInterface
+    public function getClient(): ClientInterface
     {
         return $this->client;
     }
 
     /**
-     * @return MessengerUserInterface|null
+     * @return MessengerUserInterface
      */
-    public function getMessengerUser(): ?MessengerUserInterface
+    public function getMessengerUser(): MessengerUserInterface
     {
         return $this->messengerUser;
     }
