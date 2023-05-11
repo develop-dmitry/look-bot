@@ -53,6 +53,9 @@ trait HasMainMenu
         $buttons[] = $this->buttonFactory->makeReplyButton()
             ->setText($this->dictionary->getTranslate('telegram.menu.points.support'));
 
+        $buttons[] = $this->buttonFactory->makeReplyButton()
+            ->setText($this->dictionary->getTranslate('telegram.menu.points.dressing_room'));
+
         return $buttons;
     }
 

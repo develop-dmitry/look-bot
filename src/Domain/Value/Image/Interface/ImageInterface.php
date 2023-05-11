@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Look\Domain\Value\Photo\Interface;
+namespace Look\Domain\Value\Image\Interface;
 
 use Look\Domain\Value\Exception\InvalidValueException;
 
-interface PhotoInterface
+interface ImageInterface
 {
     /**
      * @return string
@@ -19,4 +19,14 @@ interface PhotoInterface
      * @throws InvalidValueException
      */
     public function setValue(string $value): void;
+
+    /**
+     * @return string
+     */
+    public function getAbsolutePath(): string;
+
+    /**
+     * @return bool
+     */
+    public function fileExists(): bool;
 }

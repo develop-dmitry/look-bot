@@ -8,6 +8,8 @@ use Look\Application\Client\IdentifyClient\IdentifyClientUseCase;
 use Look\Application\Client\IdentifyClient\Interface\IdentifyClientInterface;
 use Look\Application\Client\SaveClient\Interface\SaveClientInterface;
 use Look\Application\Client\SaveClient\SaveClientUseCase;
+use Look\Application\Clothes\GetClothesForClient\GetClothesForClientUseCase;
+use Look\Application\Clothes\GetClothesForClient\Interface\GetClothesForClientInterface;
 use Look\Application\Dictionary\Dictionary;
 use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\FormatDate\FormatDate;
@@ -35,6 +37,9 @@ use Look\Domain\Client\ClientBuilder;
 use Look\Domain\Client\Interface\ClientBuilderInterface;
 use Look\Domain\Client\Interface\ClientInterface;
 use Look\Domain\Client\Interface\ClientRepositoryInterface;
+use Look\Domain\Clothes\ClothesBuilder;
+use Look\Domain\Clothes\Interface\ClothesBuilderInterface;
+use Look\Domain\Clothes\Interface\ClothesRepositoryInterface;
 use Look\Domain\GeoLocation\GeoLocationBuilder;
 use Look\Domain\GeoLocation\Interface\GeoLocationBuilderInterface;
 use Look\Domain\MessengerUser\Interface\MessengerUserBuilderInterface;
@@ -52,6 +57,7 @@ use Look\Infrastructure\Cache\Weather\WeatherCache;
 use Look\Infrastructure\Gateway\Weather\WeatherGateway;
 use Look\Infrastructure\Messenger\TelegramMessenger\TelegramMessenger;
 use Look\Infrastructure\Repository\ClientRepository\EloquentClientRepository;
+use Look\Infrastructure\Repository\ClothesRepository\EloquentClothesRepository;
 use Look\Infrastructure\Repository\MessengerUserRepository\TelegramMessengerUserRepository;
 use Look\Infrastructure\Repository\SupportMessage\EloquentSupportMessageRepository;
 use Psr\Log\LoggerInterface;
@@ -85,6 +91,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SupportMessageBuilderInterface::class, SupportMessageBuilder::class);
         $this->app->bind(SupportMessageRepositoryInterface::class, EloquentSupportMessageRepository::class);
         $this->app->bind(CreateSupportMessageInterface::class, CreateSupportMessageUseCase::class);
+
+        $this->app->bind(ClothesBuilderInterface::class, ClothesBuilder::class);
+        $this->app->bind(ClothesRepositoryInterface::class, EloquentClothesRepository::class);
+        $this->app->bind(GetClothesForClientInterface::class, GetClothesForClientUseCase::class);
 
         $this->app->bind(MessengerButtonFactoryInterface::class, MessengerButtonFactory::class);
         $this->app->bind(MessengerKeyboardFactoryInterface::class, MessengerKeyboardFactory::class);

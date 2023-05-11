@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Look\Domain\Value\Photo;
+namespace Look\Domain\Value\Image;
 
 use Look\Domain\Value\Exception\InvalidValueException;
-use Look\Domain\Value\Photo\Interface\PhotoInterface;
+use Look\Domain\Value\Image\Interface\ImageInterface;
 
-class Photo implements PhotoInterface
+class Image implements ImageInterface
 {
     protected string $value;
 
@@ -28,5 +28,15 @@ class Photo implements PhotoInterface
     {
         // todo добавить проверку на корректность ссылки
         $this->value = $value;
+    }
+
+    public function getAbsolutePath(): string
+    {
+        return $_SERVER['DOCUMENT_ROOT'] . $this->value;
+    }
+
+    public function fileExists(): bool
+    {
+        return file_exists($this->getAbsolutePath());
     }
 }

@@ -17,4 +17,8 @@ enum MessengerHandlerName: string
     case GetWeatherText = 'Получить погоду';
 
     case GetWeatherCallbackQuery = 'get_weather';
+
+    case DressingRoomText = 'Мой гардероб';
+
+    case DressingRoomCallbackQuery = 'dressing_room';
 }

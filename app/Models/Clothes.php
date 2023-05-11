@@ -35,4 +35,9 @@ class Clothes extends Model
     {
         return $this->morphToMany(Event::class, 'eventtable');
     }
+
+    public function clients(): BelongsToMany
+    {
+        return $this->belongsToMany(Client::class);
+    }
 }

@@ -17,8 +17,8 @@ use Look\Domain\Value\Message\Interface\MessageInterface;
 use Look\Domain\Value\Message\Message;
 use Look\Domain\Value\Name\Interface\NameInterface;
 use Look\Domain\Value\Name\Name;
-use Look\Domain\Value\Photo\Interface\PhotoInterface;
-use Look\Domain\Value\Photo\Photo;
+use Look\Domain\Value\Image\Interface\ImageInterface;
+use Look\Domain\Value\Image\Image;
 use Look\Domain\Value\Temperature\Temperature;
 use Look\Domain\Value\Temperature\TemperatureInterface;
 
@@ -34,9 +34,9 @@ class ValueFactory implements ValueFactoryInterface
         return new Name($name);
     }
 
-    public function makePhoto(string $photo): PhotoInterface
+    public function makePhoto(string $photo): ImageInterface
     {
-        return new Photo($photo);
+        return new Image($photo);
     }
 
     public function makeLevel(int $level): LevelInterface

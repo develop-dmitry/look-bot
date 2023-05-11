@@ -11,7 +11,7 @@ use Look\Domain\Value\Id\Interface\IdInterface;
 use Look\Domain\Value\Level\Interface\LevelInterface;
 use Look\Domain\Value\Message\Interface\MessageInterface;
 use Look\Domain\Value\Name\Interface\NameInterface;
-use Look\Domain\Value\Photo\Interface\PhotoInterface;
+use Look\Domain\Value\Image\Interface\ImageInterface;
 use Look\Domain\Value\Temperature\TemperatureInterface;
 
 interface ValueFactoryInterface
@@ -32,10 +32,10 @@ interface ValueFactoryInterface
 
     /**
      * @param string $photo
-     * @return PhotoInterface
+     * @return ImageInterface
      * @throws InvalidValueException
      */
-    public function makePhoto(string $photo): PhotoInterface;
+    public function makePhoto(string $photo): ImageInterface;
 
     /**
      * @param int $level
