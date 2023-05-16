@@ -25,9 +25,13 @@ return [
     'menu' => [
         'message' => 'Меню',
         'points' => [
-            'about' => 'О нас',
             'support' => 'Сообщить о проблеме',
-            'get_weather' => 'Получить погоду'
+            'get_weather' => 'Получить погоду',
+            'dressing_room' => 'Мой гардероб'
         ]
+    ],
+    'dressing_room' => [
+        'choose_clothes' => 'Выберите вещи из своего гардероба',
+        'empty_clothes' => 'Одежды не найдено :('
     ]
 ];

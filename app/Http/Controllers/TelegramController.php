@@ -8,6 +8,7 @@ use Look\Application\Dictionary\DictionaryInterface;
 use Look\Application\Messenger\MessengerButton\Interface\MessengerButtonFactoryInterface;
 use Look\Application\Messenger\MessengerContainer\Interface\MessengerContainerFactoryInterface;
 use Look\Application\Messenger\MessengerHandler\AddSupportMessengerHandler;
+use Look\Application\Messenger\MessengerHandler\DressingRoomMessengerHandler;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerName;
 use Look\Application\Messenger\MessengerHandler\Enum\MessengerHandlerType;
 use Look\Application\Messenger\MessengerHandler\Exception\MessengerHandlerAlreadyExistsException;
@@ -55,6 +56,8 @@ class TelegramController extends Controller
         $this->addHandler(app()->makeWith(GetWeatherMessengerHandler::class, [
             'weatherMenu' => app()->make(TelegramGetWeatherMenuUseCase::class)
         ]));
+
+        $this->addHandler(app()->make(DressingRoomMessengerHandler::class));
     }
 
     protected function addHandler(MessengerHandlerInterface $handler): void

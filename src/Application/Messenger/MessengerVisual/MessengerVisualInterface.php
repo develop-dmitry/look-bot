@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Look\Application\Messenger\MessengerVisual;
 
 use Look\Application\Messenger\MessengerKeyboard\Interface\MessengerKeyboardInterface;
+use Look\Domain\Value\Image\Interface\ImageInterface;
 
 interface MessengerVisualInterface
 {
