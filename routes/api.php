@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClothesController;
 use App\Http\Controllers\TelegramController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('telegram', [TelegramController::class, 'handle']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('v1')->group(static function () {
+    Route::prefix('clothes')->group(static function () {
+        Route::post('/', [ClothesController::class, 'getClothes']);
+        Route::post('choose', [ClothesController::class, 'chooseClothes']);
+    });
 });

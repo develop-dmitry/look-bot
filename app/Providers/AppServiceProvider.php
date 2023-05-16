@@ -8,6 +8,8 @@ use Look\Application\Client\IdentifyClient\IdentifyClientUseCase;
 use Look\Application\Client\IdentifyClient\Interface\IdentifyClientInterface;
 use Look\Application\Client\SaveClient\Interface\SaveClientInterface;
 use Look\Application\Client\SaveClient\SaveClientUseCase;
+use Look\Application\Clothes\ChooseClothes\ChooseClothesUseCase;
+use Look\Application\Clothes\ChooseClothes\Interface\ChooseClothesInterface;
 use Look\Application\Clothes\GetClothesForClient\GetClothesForClientUseCase;
 use Look\Application\Clothes\GetClothesForClient\Interface\GetClothesForClientInterface;
 use Look\Application\Dictionary\Dictionary;
@@ -95,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ClothesBuilderInterface::class, ClothesBuilder::class);
         $this->app->bind(ClothesRepositoryInterface::class, EloquentClothesRepository::class);
         $this->app->bind(GetClothesForClientInterface::class, GetClothesForClientUseCase::class);
+        $this->app->bind(ChooseClothesInterface::class, ChooseClothesUseCase::class);
 
         $this->app->bind(MessengerButtonFactoryInterface::class, MessengerButtonFactory::class);
         $this->app->bind(MessengerKeyboardFactoryInterface::class, MessengerKeyboardFactory::class);
